@@ -75,41 +75,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setSession(session);
-        
-        // Fetch user profile
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data, error }) => {
-            if (error) {
-              console.error('Error fetching user profile:', error);
-              return;
-            }
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          setSession(session);
+          
+          // Fetch user profile
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (error) {
+            console.error('Error fetching user profile:', error);
+            return;
+          }
 
-            if (data) {
-              const appUser: AppUser = {
-                id: session.user.id,
-                email: session.user.email || '',
-                name: data.name,
-                role: data.role,
-                createdAt: data.created_at
-              };
-              
-              setCurrentUser(appUser);
-            }
-          })
-          .finally(() => {
-            setLoading(false);
-          });
-      } else {
+          if (data) {
+            const appUser: AppUser = {
+              id: session.user.id,
+              email: session.user.email || '',
+              name: data.name,
+              role: data.role,
+              createdAt: data.created_at
+            };
+            
+            setCurrentUser(appUser);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
+      } finally {
         setLoading(false);
       }
-    });
+    };
+    
+    checkSession();
 
     return () => {
       subscription.unsubscribe();
