@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -40,7 +39,6 @@ const DrugSelector = ({ onDrugSelect }: DrugSelectorProps) => {
         console.log(`Fetched ${data?.length || 0} drugs from Supabase`);
         
         if (!data || data.length === 0) {
-          // Display a message instead of creating sample data
           toast.warning("No drugs found in the database.");
           setDrugs([]);
         } else {
@@ -49,7 +47,7 @@ const DrugSelector = ({ onDrugSelect }: DrugSelectorProps) => {
             drug_id: drug.drug_id,
             name: drug.drug_name,
             form: drug.drug_form,
-            atcCode: drug.atc_code
+            atcCode: drug.atc_code || ''
           }));
           
           setDrugs(transformedData);
@@ -57,19 +55,8 @@ const DrugSelector = ({ onDrugSelect }: DrugSelectorProps) => {
       } catch (error: any) {
         console.error("Error fetching drugs:", error);
         setError("Failed to load drug database: " + error.message);
-        
-        // Create mock data if database fails
-        const mockDrugs: Drug[] = [
-          { drug_id: "1", name: "Acetaminophen", form: "Tablet", atcCode: "N02BE01" },
-          { drug_id: "2", name: "Acetaminophen", form: "Suspension", atcCode: "N02BE01" },
-          { drug_id: "3", name: "Ibuprofen", form: "Tablet", atcCode: "M01AE01" },
-          { drug_id: "4", name: "Ibuprofen", form: "Suspension", atcCode: "M01AE01" },
-          { drug_id: "5", name: "Amoxicillin", form: "Capsule", atcCode: "J01CA04" },
-          { drug_id: "6", name: "Amoxicillin", form: "Suspension", atcCode: "J01CA04" }
-        ];
-        
-        setDrugs(mockDrugs);
-        toast.error("Using mock drug data due to database error");
+        setDrugs([]);
+        toast.error("Failed to fetch drugs from database");
       } finally {
         setIsLoading(false);
       }
@@ -166,25 +153,26 @@ const DrugSelector = ({ onDrugSelect }: DrugSelectorProps) => {
     );
   }
 
+  // Modify existing render logic to improve mobile responsiveness
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full">
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-800 rounded-md p-4">
           <p>{error}</p>
         </div>
       )}
       
-      <div className="relative">
-        <Label htmlFor="drugSearch">Search Drug</Label>
-        <div className="relative">
+      <div className="relative w-full">
+        <Label htmlFor="drugSearch" className="sr-only">Search Drug</Label>
+        <div className="relative w-full">
           <Input 
             id="drugSearch"
             ref={searchInputRef}
-            placeholder="Type to search drugs..."
+            placeholder="Search medications..."
             value={searchTerm}
             onChange={handleSearchChange}
             onFocus={() => setShowDropdown(true)}
-            className="w-full"
+            className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-medical-primary"
           />
           <p className="text-xs text-gray-500 mt-1">{searchStats}</p>
           
@@ -203,14 +191,14 @@ const DrugSelector = ({ onDrugSelect }: DrugSelectorProps) => {
                       onClick={() => handleSelectDrug(drugName)}
                     >
                       <div className="flex items-center justify-between">
-                        <span>{drugName}</span>
+                        <span className="text-sm">{drugName}</span>
                         {selectedDrug === drugName && <Check className="h-4 w-4 text-blue-600" />}
                       </div>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <div className="px-3 py-2 text-gray-500 text-center">
+                <div className="px-3 py-2 text-gray-500 text-center text-sm">
                   {searchTerm ? `No drugs matching "${searchTerm}"` : "No drugs available"}
                 </div>
               )}
@@ -220,11 +208,11 @@ const DrugSelector = ({ onDrugSelect }: DrugSelectorProps) => {
       </div>
       
       {selectedDrug && formsForSelectedDrug.length > 0 && (
-        <div>
-          <Label htmlFor="drugForm">Dosage Form</Label>
+        <div className="w-full">
+          <Label htmlFor="drugForm" className="sr-only">Dosage Form</Label>
           <Select onValueChange={handleSelectForm} value={selectedForm}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select form" />
+              <SelectValue placeholder="Select dosage form" />
             </SelectTrigger>
             <SelectContent>
               {formsForSelectedDrug.map(form => (
@@ -239,8 +227,8 @@ const DrugSelector = ({ onDrugSelect }: DrugSelectorProps) => {
       
       {selectedDrug && selectedForm && (
         <div className="mt-2 p-3 bg-blue-50 rounded-md border border-blue-100">
-          <p className="font-medium text-blue-800">Selected medication:</p>
-          <p className="text-sm">{selectedDrug} - {selectedForm}</p>
+          <p className="font-medium text-blue-800 text-sm">Selected medication:</p>
+          <p className="text-xs">{selectedDrug} - {selectedForm}</p>
         </div>
       )}
     </div>

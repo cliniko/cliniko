@@ -80,6 +80,33 @@ export type Database = {
           },
         ]
       }
+      drugs: {
+        Row: {
+          atc_code: string | null
+          created_at: string | null
+          drug_form: string
+          drug_id: string
+          drug_name: string
+          id: string
+        }
+        Insert: {
+          atc_code?: string | null
+          created_at?: string | null
+          drug_form: string
+          drug_id: string
+          drug_name: string
+          id?: string
+        }
+        Update: {
+          atc_code?: string | null
+          created_at?: string | null
+          drug_form?: string
+          drug_id?: string
+          drug_name?: string
+          id?: string
+        }
+        Relationships: []
+      }
       patients: {
         Row: {
           address: string | null
