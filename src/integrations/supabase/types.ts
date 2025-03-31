@@ -9,7 +9,193 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      consultations: {
+        Row: {
+          assessment: Json | null
+          attending_nurse: string | null
+          attending_physician: string
+          bp_monitoring: boolean | null
+          chief_complaint: string
+          created_at: string
+          created_by: string
+          date: string
+          hba1c_monitoring: boolean | null
+          id: string
+          objective: Json | null
+          patient_id: string
+          patient_type: string
+          plan: Json | null
+          prescription: Json | null
+          subjective: string | null
+          time: string
+          vital_signs: Json | null
+        }
+        Insert: {
+          assessment?: Json | null
+          attending_nurse?: string | null
+          attending_physician: string
+          bp_monitoring?: boolean | null
+          chief_complaint: string
+          created_at?: string
+          created_by: string
+          date: string
+          hba1c_monitoring?: boolean | null
+          id?: string
+          objective?: Json | null
+          patient_id: string
+          patient_type: string
+          plan?: Json | null
+          prescription?: Json | null
+          subjective?: string | null
+          time: string
+          vital_signs?: Json | null
+        }
+        Update: {
+          assessment?: Json | null
+          attending_nurse?: string | null
+          attending_physician?: string
+          bp_monitoring?: boolean | null
+          chief_complaint?: string
+          created_at?: string
+          created_by?: string
+          date?: string
+          hba1c_monitoring?: boolean | null
+          id?: string
+          objective?: Json | null
+          patient_id?: string
+          patient_type?: string
+          plan?: Json | null
+          prescription?: Json | null
+          subjective?: string | null
+          time?: string
+          vital_signs?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultations_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patients: {
+        Row: {
+          address: string | null
+          contact: string | null
+          created_at: string
+          created_by: string
+          date_of_birth: string
+          email: string | null
+          gender: string
+          id: string
+          medical_history: string | null
+          name: string
+        }
+        Insert: {
+          address?: string | null
+          contact?: string | null
+          created_at?: string
+          created_by: string
+          date_of_birth: string
+          email?: string | null
+          gender: string
+          id?: string
+          medical_history?: string | null
+          name: string
+        }
+        Update: {
+          address?: string | null
+          contact?: string | null
+          created_at?: string
+          created_by?: string
+          date_of_birth?: string
+          email?: string | null
+          gender?: string
+          id?: string
+          medical_history?: string | null
+          name?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          name: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      vital_signs: {
+        Row: {
+          created_by: string
+          date: string
+          diastolic_bp: number | null
+          heart_rate: number | null
+          height: number | null
+          id: string
+          oxygen_saturation: number | null
+          patient_id: string
+          respiratory_rate: number | null
+          systolic_bp: number | null
+          temperature: number | null
+          weight: number | null
+        }
+        Insert: {
+          created_by: string
+          date?: string
+          diastolic_bp?: number | null
+          heart_rate?: number | null
+          height?: number | null
+          id?: string
+          oxygen_saturation?: number | null
+          patient_id: string
+          respiratory_rate?: number | null
+          systolic_bp?: number | null
+          temperature?: number | null
+          weight?: number | null
+        }
+        Update: {
+          created_by?: string
+          date?: string
+          diastolic_bp?: number | null
+          heart_rate?: number | null
+          height?: number | null
+          id?: string
+          oxygen_saturation?: number | null
+          patient_id?: string
+          respiratory_rate?: number | null
+          systolic_bp?: number | null
+          temperature?: number | null
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vital_signs_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +204,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_role: "admin" | "doctor" | "nurse" | "staff"
     }
     CompositeTypes: {
       [_ in never]: never

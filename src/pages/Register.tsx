@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UserRole } from '@/types';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Register = () => {
   const [email, setEmail] = useState('');
@@ -22,12 +24,26 @@ const Register = () => {
     e.preventDefault();
     setError('');
     
+    if (!email || !password || !name) {
+      setError('Please fill in all required fields');
+      return;
+    }
+    
     if (password !== confirmPassword) {
       setError("Passwords don't match");
       return;
     }
     
-    await register(email, password, name, role);
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
+    
+    try {
+      await register(email, password, name, role);
+    } catch (err: any) {
+      setError(err.message || 'Registration failed');
+    }
   };
   
   return (
@@ -39,6 +55,13 @@ const Register = () => {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            
             <div className="space-y-2">
               <label htmlFor="name" className="block text-sm font-medium">
                 Full Name
@@ -116,10 +139,6 @@ const Register = () => {
                 className="w-full"
               />
             </div>
-            
-            {error && (
-              <div className="text-medical-danger text-sm font-medium">{error}</div>
-            )}
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <Button

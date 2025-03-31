@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import RequireAuth from "./components/auth/RequireAuth";
 import AppLayout from "./components/layout/AppLayout";
@@ -28,18 +28,42 @@ const App = () => (
             {/* Public Routes */}
             <Route path="/" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/index" element={<Navigate to="/" replace />} />
             
             {/* Protected Routes */}
-            <Route element={
-              <RequireAuth>
-                <AppLayout />
-              </RequireAuth>
-            }>
+            <Route 
+              element={
+                <RequireAuth>
+                  <AppLayout />
+                </RequireAuth>
+              }
+            >
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/consults" element={<Consults />} />
+              <Route 
+                path="/consults" 
+                element={
+                  <RequireAuth allowedRoles={['admin', 'doctor', 'nurse']}>
+                    <Consults />
+                  </RequireAuth>
+                } 
+              />
               <Route path="/patients" element={<Patients />} />
-              <Route path="/users" element={<Users />} />
-              <Route path="/vitals" element={<Vitals />} />
+              <Route 
+                path="/users" 
+                element={
+                  <RequireAuth allowedRoles={['admin']}>
+                    <Users />
+                  </RequireAuth>
+                } 
+              />
+              <Route 
+                path="/vitals" 
+                element={
+                  <RequireAuth allowedRoles={['admin', 'doctor', 'nurse']}>
+                    <Vitals />
+                  </RequireAuth>
+                } 
+              />
             </Route>
             
             {/* 404 Route */}

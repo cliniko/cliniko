@@ -1,25 +1,120 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UserCog, UserRound, Plus } from 'lucide-react';
+import { UserCog, UserRound, Plus, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { UserRole } from '@/types';
+import { UserRole, User } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { Badge } from '@/components/ui/badge';
+
+interface UserWithProfile extends User {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  createdAt: string;
+}
 
 const Users = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [role, setRole] = useState<UserRole>('doctor');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [role, setRole] = useState<UserRole>('staff');
+  const [users, setUsers] = useState<UserWithProfile[]>([]);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { currentUser } = useAuth();
   
-  const handleNewUser = () => {
-    toast({
-      title: "User added",
-      description: "New user has been successfully created",
-    });
-    setIsAddModalOpen(false);
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+  
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('name');
+      
+      if (error) throw error;
+      
+      const formattedUsers: UserWithProfile[] = data.map((user: any) => ({
+        id: user.id,
+        name: user.name,
+        email: user.email || '',
+        role: user.role,
+        createdAt: user.created_at
+      }));
+      
+      setUsers(formattedUsers);
+    } catch (error: any) {
+      console.error('Error fetching users:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load users',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleNewUser = async () => {
+    try {
+      if (!email || !password || !name) {
+        toast({
+          title: 'Missing fields',
+          description: 'All fields are required',
+          variant: 'destructive'
+        });
+        return;
+      }
+      
+      // In a real production app, you would use an admin function to create users
+      // For demo purposes, we're showing the UI flow without the actual creation
+      toast({
+        title: "User creation request sent",
+        description: "Admin will need to approve this request",
+      });
+      
+      setIsAddModalOpen(false);
+      setEmail('');
+      setPassword('');
+      setName('');
+      setRole('staff');
+      
+      // Refresh the user list
+      fetchUsers();
+    } catch (error: any) {
+      console.error('Error creating user:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to create user',
+        variant: 'destructive'
+      });
+    }
+  };
+  
+  const getRoleBadgeColor = (role: UserRole) => {
+    switch (role) {
+      case 'admin':
+        return 'bg-purple-100 text-purple-800';
+      case 'doctor':
+        return 'bg-blue-100 text-blue-800';
+      case 'nurse':
+        return 'bg-green-100 text-green-800';
+      case 'staff':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
   };
   
   return (
@@ -45,17 +140,34 @@ const Users = () => {
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
                 <label htmlFor="name" className="block text-sm font-medium">Full Name</label>
-                <Input id="name" className="w-full" />
+                <Input 
+                  id="name" 
+                  className="w-full" 
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
               </div>
               
               <div className="space-y-2">
                 <label htmlFor="email" className="block text-sm font-medium">Email</label>
-                <Input id="email" type="email" className="w-full" />
+                <Input 
+                  id="email" 
+                  type="email" 
+                  className="w-full"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
               </div>
               
               <div className="space-y-2">
                 <label htmlFor="password" className="block text-sm font-medium">Password</label>
-                <Input id="password" type="password" className="w-full" />
+                <Input 
+                  id="password" 
+                  type="password" 
+                  className="w-full"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
               </div>
               
               <div className="space-y-2">
@@ -70,7 +182,7 @@ const Users = () => {
                   <SelectContent>
                     <SelectItem value="doctor">Doctor</SelectItem>
                     <SelectItem value="nurse">Nurse</SelectItem>
-                    <SelectItem value="administrator">Administrator</SelectItem>
+                    <SelectItem value="admin">Administrator</SelectItem>
                     <SelectItem value="staff">Staff</SelectItem>
                   </SelectContent>
                 </Select>
@@ -138,34 +250,56 @@ const Users = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              <div className="bg-gray-50 p-4 rounded-md flex items-center justify-center h-40">
-                <div className="text-center">
-                  <UserCog size={32} className="mx-auto text-gray-400 mb-2" />
-                  <p className="text-gray-500">No users found. Add your first user to get started.</p>
+              {loading ? (
+                <div className="flex justify-center items-center h-40">
+                  <Loader2 className="animate-spin h-8 w-8 text-medical-primary" />
                 </div>
-              </div>
-              
-              <table className="min-w-full mt-4">
-                <thead>
-                  <tr>
-                    <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
-                      Name
-                    </th>
-                    <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
-                      Email
-                    </th>
-                    <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
-                      Role
-                    </th>
-                    <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {/* Users will be listed here */}
-                </tbody>
-              </table>
+              ) : users.length === 0 ? (
+                <div className="bg-gray-50 p-4 rounded-md flex items-center justify-center h-40">
+                  <div className="text-center">
+                    <UserCog size={32} className="mx-auto text-gray-400 mb-2" />
+                    <p className="text-gray-500">No users found. Add your first user to get started.</p>
+                  </div>
+                </div>
+              ) : (
+                <table className="min-w-full mt-4">
+                  <thead>
+                    <tr>
+                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
+                        Name
+                      </th>
+                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
+                        Role
+                      </th>
+                      <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider py-2">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map((user) => (
+                      <tr key={user.id} className="border-t">
+                        <td className="py-2">
+                          <div>
+                            <p className="font-medium">{user.name}</p>
+                            <p className="text-xs text-gray-500">{user.email}</p>
+                          </div>
+                        </td>
+                        <td className="py-2">
+                          <Badge className={getRoleBadgeColor(user.role)}>
+                            {user.role}
+                          </Badge>
+                        </td>
+                        <td className="py-2">
+                          <Button variant="ghost" size="sm" disabled={user.id === currentUser?.id}>
+                            Edit
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </CardContent>
         </Card>

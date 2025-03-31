@@ -2,15 +2,18 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { User, UserRole } from '@/types';
+import { User as AppUser, UserRole } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
+import { Session, User } from '@supabase/supabase-js';
 
 interface AuthContextType {
-  currentUser: User | null;
+  currentUser: AppUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string, role: UserRole) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
+  session: Session | null;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -24,66 +27,117 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Check for existing session on mount
+  // Check for existing session and subscribe to auth changes
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        // This would normally check with Supabase for an existing session
-        const storedUser = localStorage.getItem('emr-user');
-        if (storedUser) {
-          setCurrentUser(JSON.parse(storedUser));
+    // Set up auth state listener first
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setSession(session);
+        
+        if (session?.user) {
+          try {
+            // Fetch user profile from profiles table
+            const { data, error } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', session.user.id)
+              .single();
+
+            if (error) {
+              throw error;
+            }
+
+            const appUser: AppUser = {
+              id: session.user.id,
+              email: session.user.email || '',
+              name: data.name,
+              role: data.role,
+              createdAt: data.created_at
+            };
+            
+            setCurrentUser(appUser);
+          } catch (error) {
+            console.error('Error fetching user profile:', error);
+            setCurrentUser(null);
+          }
+        } else {
+          setCurrentUser(null);
         }
-      } catch (error) {
-        console.error("Authentication error:", error);
-      } finally {
+        
         setLoading(false);
       }
+    );
+
+    // Then check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setSession(session);
+        
+        // Fetch user profile
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data, error }) => {
+            if (error) {
+              console.error('Error fetching user profile:', error);
+              return;
+            }
+
+            if (data) {
+              const appUser: AppUser = {
+                id: session.user.id,
+                email: session.user.email || '',
+                name: data.name,
+                role: data.role,
+                createdAt: data.created_at
+              };
+              
+              setCurrentUser(appUser);
+            }
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      } else {
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
     };
-    
-    checkAuth();
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
       setLoading(true);
       
-      // In a real app with Supabase, we'd do:
-      // const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      // if (error) throw error;
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
       
-      // Mock login for demo - would call Supabase in real implementation
-      if (email && password) {
-        // Mock user data
-        const mockUser: User = {
-          id: '1',
-          email,
-          name: email.split('@')[0],
-          role: 'doctor', // Default to doctor role
-          createdAt: new Date().toISOString(),
-        };
-        
-        setCurrentUser(mockUser);
-        localStorage.setItem('emr-user', JSON.stringify(mockUser));
-        
-        toast({
-          title: "Login successful",
-          description: "Welcome back to the EMR system.",
-        });
-        
-        navigate('/dashboard');
-      } else {
-        throw new Error("Please provide email and password");
-      }
-    } catch (error) {
+      if (error) throw error;
+      
+      toast({
+        title: "Login successful",
+        description: "Welcome back to the EMR system.",
+      });
+      
+      navigate('/dashboard');
+    } catch (error: any) {
       console.error("Login error:", error);
       toast({
         title: "Login failed",
-        description: error instanceof Error ? error.message : "Please check your credentials",
+        description: error.message || "Please check your credentials",
         variant: "destructive",
       });
     } finally {
@@ -95,38 +149,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       
-      // In a real app with Supabase, we'd do:
-      // const { data, error } = await supabase.auth.signUp({ email, password });
-      // if (error) throw error;
-      // Then store additional user data in a Supabase table
+      // Sign up the user
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            role
+          }
+        }
+      });
       
-      // Mock registration for demo
-      if (email && password && name) {
-        const mockUser: User = {
-          id: Date.now().toString(),
-          email,
-          name,
-          role,
-          createdAt: new Date().toISOString(),
-        };
-        
-        setCurrentUser(mockUser);
-        localStorage.setItem('emr-user', JSON.stringify(mockUser));
-        
-        toast({
-          title: "Registration successful",
-          description: "Your account has been created.",
-        });
-        
-        navigate('/dashboard');
-      } else {
-        throw new Error("Please provide all required information");
-      }
-    } catch (error) {
+      if (error) throw error;
+      
+      toast({
+        title: "Registration successful",
+        description: "Your account has been created.",
+      });
+      
+      navigate('/dashboard');
+    } catch (error: any) {
       console.error("Registration error:", error);
       toast({
         title: "Registration failed",
-        description: error instanceof Error ? error.message : "An error occurred during registration",
+        description: error.message || "An error occurred during registration",
         variant: "destructive",
       });
     } finally {
@@ -136,24 +183,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      // In a real app with Supabase, we'd do:
-      // const { error } = await supabase.auth.signOut();
-      // if (error) throw error;
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
       
-      // Mock logout
       setCurrentUser(null);
-      localStorage.removeItem('emr-user');
       navigate('/');
       
       toast({
         title: "Logged out",
         description: "You have been successfully logged out.",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Logout error:", error);
       toast({
         title: "Logout failed",
-        description: "An error occurred during logout",
+        description: error.message || "An error occurred during logout",
         variant: "destructive",
       });
     }
@@ -166,11 +210,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     register,
     logout,
     isAuthenticated: !!currentUser,
+    session
   };
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };
