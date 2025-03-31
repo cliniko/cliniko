@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { CalendarIcon, Search, UserRound, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 const Patients = () => {
   const [date, setDate] = useState<Date | undefined>();
