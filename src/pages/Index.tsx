@@ -5,19 +5,34 @@ import { useAuth } from '@/context/AuthContext';
 
 const Index = () => {
   const navigate = useNavigate();
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, currentUser } = useAuth();
   
   useEffect(() => {
     // Wait until authentication check is complete
     if (!loading) {
-      // Redirect to dashboard if authenticated, otherwise to login
-      if (isAuthenticated) {
-        navigate('/dashboard');
+      if (isAuthenticated && currentUser) {
+        // Redirect based on user role
+        switch (currentUser.role) {
+          case 'admin':
+            navigate('/users');
+            break;
+          case 'doctor':
+            navigate('/consults');
+            break;
+          case 'nurse':
+            navigate('/vitals');
+            break;
+          case 'staff':
+            navigate('/patients');
+            break;
+          default:
+            navigate('/dashboard');
+        }
       } else {
         navigate('/');
       }
     }
-  }, [navigate, isAuthenticated, loading]);
+  }, [navigate, isAuthenticated, loading, currentUser]);
   
   // Show loading state while checking auth
   if (loading) {

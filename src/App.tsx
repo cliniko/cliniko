@@ -16,6 +16,7 @@ import Patients from "./pages/Patients";
 import Users from "./pages/Users";
 import Vitals from "./pages/Vitals";
 import NotFound from "./pages/NotFound";
+import Index from "./pages/Index";
 
 const queryClient = new QueryClient();
 
@@ -28,7 +29,7 @@ const App = () => (
             {/* Public Routes */}
             <Route path="/" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/index" element={<Navigate to="/" replace />} />
+            <Route path="/index" element={<Index />} />
             
             {/* Protected Routes */}
             <Route 
