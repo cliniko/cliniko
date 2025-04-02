@@ -11,7 +11,7 @@ const AppHeader = () => {
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-white">
       <div className="container flex h-16 items-center justify-between py-4">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <MobileNavigation />
           <Link to="/" className="flex items-center gap-1">
             <span className="font-bold text-xl text-medical-primary hidden md:block">Clinical Management</span>

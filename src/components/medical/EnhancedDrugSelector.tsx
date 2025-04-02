@@ -7,14 +7,7 @@ import { Check, ChevronsUpDown, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-
-interface Drug {
-  id: string;
-  drug_id: string;
-  drug_name: string;
-  drug_form: string;
-  atc_code?: string;
-}
+import { Drug } from '@/types';
 
 interface DrugSelectorProps {
   onSelect: (drug: Drug) => void;
@@ -25,7 +18,7 @@ export function EnhancedDrugSelector({ onSelect, placeholder = "Search drugs..."
   const [open, setOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   
-  const { data: drugs, isLoading } = useQuery({
+  const { data: drugs, isLoading, error } = useQuery({
     queryKey: ['drugs', searchTerm],
     queryFn: async () => {
       let query = supabase.from('drugs').select('*');
@@ -34,13 +27,12 @@ export function EnhancedDrugSelector({ onSelect, placeholder = "Search drugs..."
         query = query.ilike('drug_name', `%${searchTerm}%`);
       }
       
-      const { data, error } = await query.limit(20);
+      const { data, error } = await query.limit(30);
       
       if (error) throw error;
       return data as Drug[];
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
-    enabled: open,
   });
 
   const handleSelect = (drug: Drug) => {
@@ -61,12 +53,13 @@ export function EnhancedDrugSelector({ onSelect, placeholder = "Search drugs..."
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[300px] p-0" align="start">
+      <PopoverContent className="w-full p-0" align="start" sideOffset={5}>
         <Command>
           <CommandInput 
             placeholder="Search drugs..." 
             onValueChange={setSearchTerm}
             value={searchTerm}
+            className="h-9"
           />
           <CommandList className="max-h-[300px] overflow-auto">
             {isLoading ? (
@@ -74,23 +67,32 @@ export function EnhancedDrugSelector({ onSelect, placeholder = "Search drugs..."
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 <span>Loading...</span>
               </div>
+            ) : error ? (
+              <div className="p-4 text-center text-red-500">Error loading drugs</div>
             ) : (
               <>
                 <CommandEmpty>No drugs found.</CommandEmpty>
                 <CommandGroup>
-                  {drugs?.map((drug) => (
-                    <CommandItem
-                      key={drug.id}
-                      value={`${drug.drug_name}-${drug.drug_form}`}
-                      onSelect={() => handleSelect(drug)}
-                      className="cursor-pointer"
-                    >
-                      <div className="flex flex-col">
-                        <span>{drug.drug_name}</span>
-                        <span className="text-xs text-muted-foreground">{drug.drug_form}</span>
-                      </div>
-                    </CommandItem>
-                  ))}
+                  {drugs && drugs.length > 0 ? (
+                    drugs.map((drug) => (
+                      <CommandItem
+                        key={drug.id}
+                        value={`${drug.drug_name}-${drug.drug_form}`}
+                        onSelect={() => handleSelect(drug)}
+                        className="cursor-pointer"
+                      >
+                        <div className="flex flex-col">
+                          <div className="font-medium">{drug.drug_name}</div>
+                          <div className="text-xs text-muted-foreground">{drug.drug_form}</div>
+                          {drug.atc_code && <div className="text-xs text-gray-400">ATC: {drug.atc_code}</div>}
+                        </div>
+                      </CommandItem>
+                    ))
+                  ) : (
+                    <div className="p-2 text-center text-sm text-gray-500">
+                      {searchTerm ? "No matching drugs found" : "Start typing to search drugs"}
+                    </div>
+                  )}
                 </CommandGroup>
               </>
             )}
@@ -100,3 +102,5 @@ export function EnhancedDrugSelector({ onSelect, placeholder = "Search drugs..."
     </Popover>
   );
 }
+
+export default EnhancedDrugSelector;

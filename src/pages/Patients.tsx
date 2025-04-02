@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +29,7 @@ const Patients = () => {
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
   const [medicalHistory, setMedicalHistory] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { toast } = useToast();
   const { currentUser } = useAuth();
@@ -91,6 +93,16 @@ const Patients = () => {
     refetchPatients();
   };
   
+  const resetForm = () => {
+    setName('');
+    setDob(undefined);
+    setGender('');
+    setContact('');
+    setEmail('');
+    setAddress('');
+    setMedicalHistory('');
+  };
+  
   const handleNewPatient = async () => {
     try {
       if (!name || !dob || !gender) {
@@ -102,6 +114,17 @@ const Patients = () => {
         return;
       }
       
+      if (!currentUser?.id) {
+        toast({
+          title: "Authentication error",
+          description: "You must be logged in to add a patient",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      setIsSubmitting(true);
+      
       const { data, error } = await supabase
         .from('patients')
         .insert([
@@ -109,11 +132,11 @@ const Patients = () => {
             name,
             date_of_birth: format(dob, 'yyyy-MM-dd'),
             gender,
-            contact,
-            email,
-            address,
-            medical_history: medicalHistory,
-            created_by: currentUser?.id
+            contact: contact || null,
+            email: email || null,
+            address: address || null,
+            medical_history: medicalHistory || null,
+            created_by: currentUser.id
           }
         ])
         .select();
@@ -126,13 +149,7 @@ const Patients = () => {
       });
       
       // Reset form fields
-      setName('');
-      setDob(undefined);
-      setGender('');
-      setContact('');
-      setEmail('');
-      setAddress('');
-      setMedicalHistory('');
+      resetForm();
       
       setIsAddModalOpen(false);
       refetchPatients(); // Refresh the patient list
@@ -143,6 +160,8 @@ const Patients = () => {
         description: error.message || "Failed to add patient",
         variant: "destructive"
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -163,7 +182,7 @@ const Patients = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-medical-primary">FHIR Patient Registry</h1>
+        <h1 className="text-2xl font-bold text-medical-primary">Patient Registry</h1>
         
         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
           <DialogTrigger asChild>
@@ -280,8 +299,16 @@ const Patients = () => {
               <Button 
                 onClick={handleNewPatient}
                 className="bg-medical-primary hover:bg-medical-primary/90"
+                disabled={isSubmitting}
               >
-                Save Patient
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  'Save Patient'
+                )}
               </Button>
             </div>
           </DialogContent>
