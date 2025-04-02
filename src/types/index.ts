@@ -1,4 +1,3 @@
-
 export type UserRole = 'admin' | 'doctor' | 'nurse' | 'staff';
 
 export interface User {
@@ -13,55 +12,42 @@ export interface Patient {
   id: string;
   name: string;
   dateOfBirth: string;
-  gender: 'male' | 'female' | 'other';
-  contact: string;
-  email: string;
-  address: string;
+  gender: string;
+  contact?: string;
+  email?: string;
+  address?: string;
   medicalHistory?: string;
   createdAt: string;
 }
 
-export interface VitalSigns {
+// Define the mapping interface between DB and frontend types
+export interface PatientMapping {
   id: string;
-  patientId: string;
-  date: string;
-  systolicBP: number;
-  diastolicBP: number;
-  heartRate: number;
-  respiratoryRate: number;
-  temperature: number;
-  oxygenSaturation: number;
-  height?: number;
-  weight?: number;
-  createdBy: string;
+  name: string;
+  date_of_birth: string;
+  gender: string;
+  contact: string | null;
+  email: string | null;
+  address: string | null;
+  medical_history: string | null;
+  created_at: string;
+  created_by: string;
 }
 
-export interface Consultation {
+export interface Drug {
   id: string;
-  patientId: string;
-  date: string;
-  time: string;
-  patientType: string;
-  chiefComplaint: string;
-  objective: string[];
-  assessment: string[];
-  plan: string[];
-  vitalSigns?: {
-    systolicBP?: number;
-    diastolicBP?: number;
-    temperature?: number;
-    heartRate?: number;
-    respiratoryRate?: number;
-    oxygenSaturation?: number;
-    height?: number;
-    weight?: number;
-  };
-  subjective?: string;
-  prescription?: string[];
-  attendingPhysician: string;
-  attendingNurse?: string;
-  bpMonitoring: boolean;
-  hbA1cMonitoring: boolean;
-  createdAt: string;
-  createdBy: string;
+  drug_id: string;
+  drug_name: string;
+  drug_form: string;
+  atc_code?: string;
+}
+
+export interface Prescription {
+  drug: Drug;
+  brand?: string;
+  form: string;
+  strength: string;
+  quantity: string;
+  instructions: string;
+  indication: string;
 }

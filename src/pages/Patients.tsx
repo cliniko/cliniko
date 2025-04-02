@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,21 +6,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
-import { CalendarIcon, Search, UserRound, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { CalendarIcon, Search, UserRound, Plus, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { Patient } from '@/types';
+import { Patient, PatientMapping } from '@/types';
+import { useQuery } from '@tanstack/react-query';
 
 const Patients = () => {
-  const [patients, setPatients] = useState<Patient[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   
   // Form states
   const [name, setName] = useState('');
@@ -36,52 +33,62 @@ const Patients = () => {
   const { currentUser } = useAuth();
   
   const patientsPerPage = 10;
-  
-  // Fetch patients from Supabase
-  const fetchPatients = async (page = 1, searchQuery = '') => {
-    setIsLoading(true);
-    try {
-      let query = supabase
-        .from('patients')
-        .select('*', { count: 'exact' });
+
+  // Get patients with React Query for better performance
+  const { 
+    data: patientsData,
+    isLoading,
+    refetch: refetchPatients
+  } = useQuery({
+    queryKey: ['patients', page, searchTerm],
+    queryFn: async () => {
+      try {
+        let query = supabase
+          .from('patients')
+          .select('*', { count: 'exact' });
+          
+        if (searchTerm) {
+          query = query.ilike('name', `%${searchTerm}%`);
+        }
         
-      if (searchQuery) {
-        query = query.ilike('name', `%${searchQuery}%`);
+        // Add pagination
+        const startRange = (page - 1) * patientsPerPage;
+        const endRange = startRange + patientsPerPage - 1;
+        
+        const { data, count, error } = await query
+          .order('name', { ascending: true })
+          .range(startRange, endRange);
+        
+        if (error) throw error;
+        
+        // Map the data to our Patient type
+        const patients: Patient[] = (data || []).map((item: PatientMapping) => ({
+          id: item.id,
+          name: item.name,
+          dateOfBirth: item.date_of_birth,
+          gender: item.gender,
+          contact: item.contact || undefined,
+          email: item.email || undefined,
+          address: item.address || undefined,
+          medicalHistory: item.medical_history || undefined,
+          createdAt: item.created_at
+        }));
+        
+        return {
+          patients,
+          totalCount: count || 0,
+          totalPages: count ? Math.ceil(count / patientsPerPage) : 1
+        };
+      } catch (error) {
+        console.error("Error fetching patients:", error);
+        throw error;
       }
-      
-      // Add pagination
-      const startRange = (page - 1) * patientsPerPage;
-      const endRange = startRange + patientsPerPage - 1;
-      
-      const { data, count, error } = await query
-        .order('name', { ascending: true })
-        .range(startRange, endRange);
-      
-      if (error) throw error;
-      
-      setPatients(data || []);
-      if (count !== null) {
-        setTotalPages(Math.ceil(count / patientsPerPage));
-      }
-    } catch (error: any) {
-      console.error("Error fetching patients:", error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch patients",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
     }
-  };
-  
-  useEffect(() => {
-    fetchPatients(page, searchTerm);
-  }, [page]);
+  });
   
   const handleSearch = () => {
     setPage(1); // Reset to first page
-    fetchPatients(1, searchTerm);
+    refetchPatients();
   };
   
   const handleNewPatient = async () => {
@@ -128,7 +135,7 @@ const Patients = () => {
       setMedicalHistory('');
       
       setIsAddModalOpen(false);
-      fetchPatients(page, searchTerm); // Refresh the patient list
+      refetchPatients(); // Refresh the patient list
     } catch (error: any) {
       console.error("Error adding patient:", error);
       toast({
@@ -152,7 +159,7 @@ const Patients = () => {
     
     return age;
   };
-  
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -320,17 +327,20 @@ const Patients = () => {
               {isLoading ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
-                    Loading patients...
+                    <div className="flex items-center justify-center">
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Loading patients...
+                    </div>
                   </td>
                 </tr>
-              ) : patients.length === 0 ? (
+              ) : patientsData?.patients && patientsData.patients.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
                     No patients found
                   </td>
                 </tr>
               ) : (
-                patients.map((patient) => (
+                patientsData?.patients.map((patient) => (
                   <tr key={patient.id}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {patient.name}
@@ -360,72 +370,75 @@ const Patients = () => {
         </div>
         
         {/* Pagination */}
-        <div className="bg-gray-50 px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
-          <div className="flex-1 flex justify-between sm:hidden">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => page > 1 && setPage(page - 1)}
-              disabled={page <= 1 || isLoading}
-            >
-              Previous
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => page < totalPages && setPage(page + 1)}
-              disabled={page >= totalPages || isLoading}
-            >
-              Next
-            </Button>
-          </div>
-          <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm text-gray-700">
-                Page <span className="font-medium">{page}</span> of <span className="font-medium">{totalPages}</span>
-              </p>
+        {patientsData && (
+          <div className="bg-gray-50 px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+            <div className="flex-1 flex justify-between sm:hidden">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => page > 1 && setPage(page - 1)}
+                disabled={page <= 1 || isLoading}
+              >
+                Previous
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => page < patientsData.totalPages && setPage(page + 1)}
+                disabled={page >= patientsData.totalPages || isLoading}
+              >
+                Next
+              </Button>
             </div>
-            <div>
-              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="rounded-l-md"
-                  onClick={() => page > 1 && setPage(page - 1)}
-                  disabled={page <= 1 || isLoading}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                
-                {/* Page number buttons */}
-                {[...Array(Math.min(5, totalPages))].map((_, i) => {
-                  const pageNumber = i + 1;
-                  return (
-                    <Button 
-                      key={pageNumber}
-                      variant="outline" 
-                      size="sm"
-                      className={page === pageNumber ? 'bg-medical-primary text-white' : ''}
-                      onClick={() => setPage(pageNumber)}
-                    >
-                      {pageNumber}
-                    </Button>
-                  );
-                })}
-                
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="rounded-r-md"
-                  onClick={() => page < totalPages && setPage(page + 1)}
-                  disabled={page >= totalPages || isLoading}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </nav>
+            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm text-gray-700">
+                  Page <span className="font-medium">{page}</span> of{" "}
+                  <span className="font-medium">{patientsData.totalPages}</span>
+                </p>
+              </div>
+              <div>
+                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="rounded-l-md"
+                    onClick={() => page > 1 && setPage(page - 1)}
+                    disabled={page <= 1 || isLoading}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  
+                  {/* Page number buttons - showing up to 5 pages */}
+                  {Array.from({ length: Math.min(5, patientsData.totalPages) }).map((_, i) => {
+                    const pageNumber = i + 1;
+                    return (
+                      <Button 
+                        key={pageNumber}
+                        variant="outline" 
+                        size="sm"
+                        className={page === pageNumber ? 'bg-medical-primary text-white' : ''}
+                        onClick={() => setPage(pageNumber)}
+                      >
+                        {pageNumber}
+                      </Button>
+                    );
+                  })}
+                  
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="rounded-r-md"
+                    onClick={() => page < patientsData.totalPages && setPage(page + 1)}
+                    disabled={page >= patientsData.totalPages || isLoading}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </nav>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

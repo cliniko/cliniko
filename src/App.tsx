@@ -90,8 +90,8 @@ const App = () => (
               />
             </Route>
             
-            {/* Redirect root to index for role-based routing */}
-            <Route path="" element={<Navigate to="/index" replace />} />
+            {/* Redirect root to login page */}
+            <Route path="" element={<Navigate to="/" replace />} />
             
             {/* 404 Route */}
             <Route path="*" element={<NotFound />} />

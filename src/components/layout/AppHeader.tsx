@@ -6,7 +6,7 @@ import { LogOut, User } from 'lucide-react';
 import MobileNavigation from './MobileNavigation';
 
 const AppHeader = () => {
-  const { signOut, currentUser } = useAuth();
+  const { logout, currentUser } = useAuth();
   
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-white">
@@ -28,7 +28,7 @@ const AppHeader = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={signOut}
+            onClick={logout}
             title="Sign out"
           >
             <LogOut className="h-5 w-5" />
