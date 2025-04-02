@@ -14,10 +14,38 @@ const Consults = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [consultations, setConsultations] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [patients, setPatients] = useState<Record<string, string>>({});
   
   const { toast } = useToast();
   const { currentUser } = useAuth();
   
+  // Fetch patients for mapping IDs to names
+  useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('patients')
+          .select('id, name');
+          
+        if (error) throw error;
+        
+        const patientMap: Record<string, string> = {};
+        if (data) {
+          data.forEach(patient => {
+            patientMap[patient.id] = patient.name;
+          });
+        }
+        
+        setPatients(patientMap);
+      } catch (error: any) {
+        console.error("Error fetching patients:", error);
+      }
+    };
+    
+    fetchPatients();
+  }, []);
+  
+  // Fetch consultations with patient data
   useEffect(() => {
     fetchConsultations();
   }, []);
@@ -27,11 +55,18 @@ const Consults = () => {
     try {
       const { data, error } = await supabase
         .from('consultations')
-        .select('*')
+        .select('*, patients(name)')
         .order('date', { ascending: false });
         
       if (error) throw error;
-      setConsultations(data || []);
+      
+      // Format the data to include patient name
+      const formattedData = data?.map(consult => ({
+        ...consult,
+        patient_name: consult.patients?.name || 'Unknown Patient'
+      })) || [];
+      
+      setConsultations(formattedData);
     } catch (error: any) {
       console.error("Error fetching consultations:", error);
       toast({

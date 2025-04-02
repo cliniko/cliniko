@@ -1,228 +1,192 @@
 
-import { useState, useEffect, useRef } from "react";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { X, Search, Loader2 } from "lucide-react";
-import { ICD10Entry } from "@/types/clinicalTables";
-import { useDebounce } from "@/hooks/use-debounce";
+import React, { useState, useEffect, useRef } from 'react';
+import { Textarea } from "@/components/ui/textarea";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Label } from "@/components/ui/label";
+import { Check, Loader2 } from 'lucide-react';
+import { ICD10Code } from '@/types';
 
 interface ICD10SelectorProps {
   value: string;
   onChange: (value: string) => void;
 }
 
-const ICD10Selector = ({ value, onChange }: ICD10SelectorProps) => {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const [selectedCodes, setSelectedCodes] = useState<ICD10Entry[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+const ICD10Selector: React.FC<ICD10SelectorProps> = ({ value, onChange }) => {
+  const [inputValue, setInputValue] = useState(value);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [results, setResults] = useState<ICD10Code[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [searchResults, setSearchResults] = useState<ICD10Entry[]>([]);
-  const [showDropdown, setShowDropdown] = useState(false);
-  
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const [open, setOpen] = useState(false);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  const cursorPosition = useRef<number | null>(null);
 
-  // Parse existing value into selectedCodes on initial load
+  // Update local input when external value changes
   useEffect(() => {
-    if (value && selectedCodes.length === 0) {
-      const codes = value
-        .split('\n')
-        .filter(line => line.trim().length > 0)
-        .map(line => {
-          const match = line.match(/^([A-Z0-9.]+) - (.+)$/);
-          if (match) {
-            return {
-              code: match[1],
-              description: match[2],
-              fullEntry: line
-            };
-          }
-          return { code: "", description: line, fullEntry: line };
-        });
-      
-      if (codes.length > 0) {
-        setSelectedCodes(codes);
-      }
-    }
+    setInputValue(value);
   }, [value]);
 
-  // Handle search input change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const query = e.target.value;
-    setSearchTerm(query);
-  };
-
-  // Effect for debounced search
+  // Perform ICD-10 search
   useEffect(() => {
-    if (debouncedSearchTerm.trim().length > 1) {
-      searchICD10(debouncedSearchTerm);
-    } else {
-      setSearchResults([]);
-      setShowDropdown(false);
-    }
-  }, [debouncedSearchTerm]);
-
-  // Search ICD-10 API
-  const searchICD10 = async (query: string) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(
-        `https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=${query}&df=code,name&maxList=15`
-      );
-      
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
+    const performSearch = async () => {
+      if (!searchTerm || searchTerm.length < 2) {
+        setResults([]);
+        return;
       }
-      
-      const data = await response.json();
-      
-      if (Array.isArray(data) && data.length >= 3) {
-        // The API returns data in a specific format
-        const codeIndex = data[0].indexOf('code');
-        const nameIndex = data[0].indexOf('name');
+
+      setIsLoading(true);
+      try {
+        // This would typically be an API call, but we're simulating it here
+        // In a real app, you might use a proper ICD-10 API or database
+        const sampleResults = [
+          { id: '1', code: 'E11', description: 'Type 2 diabetes mellitus' },
+          { id: '2', code: 'E11.9', description: 'Type 2 diabetes mellitus without complications' },
+          { id: '3', code: 'I10', description: 'Essential (primary) hypertension' },
+          { id: '4', code: 'J45.909', description: 'Unspecified asthma, uncomplicated' },
+          { id: '5', code: 'M54.5', description: 'Low back pain' }
+        ];
+
+        // Filter based on search term
+        const filtered = sampleResults.filter(
+          item => 
+            item.code.toLowerCase().includes(searchTerm.toLowerCase()) || 
+            item.description.toLowerCase().includes(searchTerm.toLowerCase())
+        );
         
-        if (codeIndex >= 0 && nameIndex >= 0 && Array.isArray(data[3])) {
-          const results: ICD10Entry[] = [];
-          const numResults = data[1]; // Total number of results
-          
-          // Process each result pair (code and name)
-          for (let i = 0; i < numResults; i++) {
-            const code = data[3][i * 2]; // Code is at even indices
-            const description = data[3][i * 2 + 1]; // Name is at odd indices
-            
-            results.push({
-              code,
-              description,
-              fullEntry: `${code} - ${description}`
-            });
-          }
-          
-          setSearchResults(results);
-          setShowDropdown(true);
-        } else {
-          setSearchResults([]);
+        setResults(filtered);
+      } catch (error) {
+        console.error("Error searching ICD-10 codes:", error);
+        setResults([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const timer = setTimeout(performSearch, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Handle text change in textarea
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    setInputValue(newValue);
+    onChange(newValue);
+    
+    // Store cursor position for later insertion
+    cursorPosition.current = e.target.selectionStart;
+  };
+
+  // Handle selecting an ICD-10 code
+  const handleSelectCode = (code: ICD10Code) => {
+    // Format the code nicely
+    const codeText = `${code.code} - ${code.description}`;
+    
+    // If we have a cursor position, insert at that position
+    if (cursorPosition.current !== null && textAreaRef.current) {
+      const start = inputValue.substring(0, cursorPosition.current);
+      const end = inputValue.substring(cursorPosition.current);
+      
+      const newValue = `${start}${codeText}\n${end}`;
+      setInputValue(newValue);
+      onChange(newValue);
+      
+      // Close the popover
+      setOpen(false);
+      setSearchTerm('');
+      
+      // Focus back on textarea and set cursor position after insertion
+      setTimeout(() => {
+        if (textAreaRef.current) {
+          textAreaRef.current.focus();
+          const newPosition = cursorPosition.current! + codeText.length + 1;
+          textAreaRef.current.setSelectionRange(newPosition, newPosition);
         }
-      } else {
-        setSearchResults([]);
-      }
-    } catch (error) {
-      console.error("Error searching ICD-10 codes:", error);
-      setSearchResults([]);
-    } finally {
-      setIsLoading(false);
+      }, 100);
+    } else {
+      // Fallback: just append to the end with a newline
+      const newValue = inputValue ? `${inputValue}\n${codeText}` : codeText;
+      setInputValue(newValue);
+      onChange(newValue);
+      setOpen(false);
+      setSearchTerm('');
     }
   };
-
-  // Update the parent component's value when selectedCodes changes
-  useEffect(() => {
-    const formattedValue = selectedCodes.map(entry => entry.fullEntry).join('\n');
-    onChange(formattedValue);
-  }, [selectedCodes, onChange]);
-
-  // Add an ICD-10 code
-  const addCode = (entry: ICD10Entry) => {
-    // Check if code already exists to avoid duplicates
-    if (!selectedCodes.some(c => c.code === entry.code)) {
-      setSelectedCodes(prev => [...prev, entry]);
-    }
-    
-    // Clear search
-    setSearchTerm("");
-    setSearchResults([]);
-    setShowDropdown(false);
-  };
-
-  // Remove an ICD-10 code
-  const removeCode = (codeToRemove: string) => {
-    setSelectedCodes(prev => prev.filter(entry => entry.code !== codeToRemove));
-  };
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current && 
-        !dropdownRef.current.contains(event.target as Node) &&
-        inputRef.current && 
-        !inputRef.current.contains(event.target as Node)
-      ) {
-        setShowDropdown(false);
-      }
-    };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap gap-2 min-h-[40px] p-2 border rounded-md bg-white">
-        {selectedCodes.map((entry) => (
-          <Badge key={entry.code} className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 border border-blue-200">
-            <span className="font-bold">{entry.code}</span>
-            <span> - {entry.description}</span>
-            <button 
-              type="button" 
-              onClick={() => removeCode(entry.code)}
-              className="ml-1 h-4 w-4 rounded-full bg-blue-200 hover:bg-blue-300 inline-flex items-center justify-center"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </Badge>
-        ))}
+    <div className="relative w-full">
+      <div className="flex items-center justify-between mb-2">
+        <Label htmlFor="icd10-search">Search ICD-10</Label>
       </div>
       
-      <div className="relative">
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <Search className="h-4 w-4 text-gray-400" />
-          </div>
-          <Input
-            ref={inputRef}
-            placeholder="Search ICD-10 codes or diagnoses..."
-            className="w-full pl-10"
-            value={searchTerm}
-            onChange={handleSearchChange}
-            onFocus={() => {
-              if (searchTerm.trim().length > 1 && searchResults.length > 0) {
-                setShowDropdown(true);
-              }
-            }}
-          />
-        </div>
+      <div className="flex items-start gap-2">
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <button 
+              type="button"
+              className="px-3 py-2 h-10 bg-muted hover:bg-muted/80 rounded-md text-sm font-medium flex-shrink-0"
+              onClick={() => setOpen(true)}
+            >
+              Search ICD-10
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[300px] p-0" align="start">
+            <Command>
+              <CommandInput 
+                placeholder="Search codes or descriptions..." 
+                value={searchTerm}
+                onValueChange={setSearchTerm}
+              />
+              <CommandList className="max-h-[200px]">
+                <CommandEmpty>
+                  {isLoading ? (
+                    <div className="flex items-center justify-center p-2">
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      <span>Searching...</span>
+                    </div>
+                  ) : (
+                    <span className="block p-2 text-center text-sm">No results found.</span>
+                  )}
+                </CommandEmpty>
+                <CommandGroup>
+                  {results.map((code) => (
+                    <CommandItem 
+                      key={code.id} 
+                      value={`${code.code}-${code.description}`}
+                      onSelect={() => handleSelectCode(code)}
+                      className="cursor-pointer"
+                    >
+                      <span className="font-medium">{code.code}</span>
+                      <span className="ml-2 text-sm text-muted-foreground">- {code.description}</span>
+                      <Check className="ml-auto h-4 w-4 text-green-600 opacity-0 group-data-[selected]:opacity-100" />
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
         
-        {showDropdown && (
-          <div 
-            ref={dropdownRef}
-            className="absolute z-50 mt-1 w-full bg-white rounded-md border border-gray-200 shadow-lg max-h-60 overflow-y-auto"
-          >
-            {isLoading ? (
-              <div className="p-4 text-center text-gray-500">
-                <div className="flex items-center justify-center">
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  <span>Searching...</span>
-                </div>
-              </div>
-            ) : searchResults.length > 0 ? (
-              <ul className="py-1">
-                {searchResults.map((result) => (
-                  <li 
-                    key={result.code}
-                    className="px-3 py-2 hover:bg-blue-50 cursor-pointer"
-                    onClick={() => addCode(result)}
-                  >
-                    <div className="font-medium">{result.code} - {result.description}</div>
-                  </li>
-                ))}
-              </ul>
-            ) : debouncedSearchTerm.trim().length > 1 ? (
-              <div className="p-4 text-center text-gray-500">No results found</div>
-            ) : null}
-          </div>
-        )}
+        <Textarea
+          ref={textAreaRef}
+          placeholder="Enter assessment or search ICD-10 codes to add them here..."
+          rows={5}
+          className="flex-1"
+          value={inputValue}
+          onChange={handleTextChange}
+          onFocus={() => {
+            cursorPosition.current = textAreaRef.current?.selectionStart || null;
+          }}
+          onKeyUp={(e) => {
+            cursorPosition.current = e.currentTarget.selectionStart;
+          }}
+          onClick={(e) => {
+            cursorPosition.current = e.currentTarget.selectionStart;
+          }}
+        />
       </div>
+      <p className="text-xs text-muted-foreground mt-1">
+        Type directly or search and select ICD-10 codes to add to your assessment.
+      </p>
     </div>
   );
 };

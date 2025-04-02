@@ -2,13 +2,14 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { FileText, Eye, Edit, Trash } from 'lucide-react';
+import { FileText, Eye, Edit, Trash, Loader2 } from 'lucide-react';
 
 interface Consultation {
   id: string;
   date: string;
   time: string;
   patient_id: string;
+  patient_name?: string; // From join with patients table
   patient_type: string;
   chief_complaint: string;
   // Add other fields as needed
@@ -19,14 +20,25 @@ interface ConsultsListProps {
   onView: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
+  isLoading?: boolean;
 }
 
 const ConsultsList = ({
   consultations,
   onView,
   onEdit,
-  onDelete
+  onDelete,
+  isLoading = false
 }: ConsultsListProps) => {
+  if (isLoading) {
+    return (
+      <div className="bg-white rounded-md shadow p-6 min-h-[400px] flex flex-col items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-medical-primary mb-4" />
+        <p>Loading consultations...</p>
+      </div>
+    );
+  }
+
   if (consultations.length === 0) {
     return (
       <div className="bg-white rounded-md shadow p-6 min-h-[400px] flex flex-col items-center justify-center text-center">
@@ -63,7 +75,7 @@ const ConsultsList = ({
             <TableRow key={consult.id}>
               <TableCell>{format(new Date(consult.date), 'MM/dd/yyyy')}</TableCell>
               <TableCell>{consult.time}</TableCell>
-              <TableCell>{consult.patient_id}</TableCell>
+              <TableCell>{consult.patient_name || 'Unknown Patient'}</TableCell>
               <TableCell>{consult.patient_type}</TableCell>
               <TableCell className="max-w-xs truncate">{consult.chief_complaint}</TableCell>
               <TableCell className="text-right">

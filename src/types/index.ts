@@ -44,11 +44,26 @@ export interface Drug {
 }
 
 export interface Prescription {
-  drug: Drug;
+  drug: DrugWithForm;
   brand?: string;
   form: string;
   strength: string;
   quantity: string;
   instructions: string;
   indication: string;
+}
+
+export interface DrugWithForm {
+  id: string;
+  drug_id: string;
+  name: string;
+  form: string;
+  atcCode?: string;
+}
+
+// Add ICD-10 specific interfaces
+export interface ICD10Code {
+  id: string;
+  code: string;
+  description: string;
 }

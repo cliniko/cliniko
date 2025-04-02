@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -185,7 +184,7 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
         attending_nurse: attendingNurse,
         bp_monitoring: bpMonitoring,
         hba1c_monitoring: hba1cMonitoring,
-        created_by: currentUser?.id
+        created_by: currentUser?.id || ''
       };
       
       onSave(consultData);
@@ -199,7 +198,9 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
     }
   };
 
+  
   return (
+    
     <div className="grid grid-cols-1 gap-6 py-4">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-2">
@@ -259,6 +260,11 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
             ))}
           </SelectContent>
         </Select>
+        {patient && (
+          <p className="text-xs text-muted-foreground mt-1">
+            Selected patient ID: {patient}
+          </p>
+        )}
       </div>
       
       <div className="space-y-2">
