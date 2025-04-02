@@ -35,37 +35,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Check for existing session and subscribe to auth changes
   useEffect(() => {
-    // Set up auth state listener first
+    // First set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setSession(session);
+      (event, newSession) => {
+        // Always update session first
+        setSession(newSession);
         
-        if (session?.user) {
-          try {
-            // Fetch user profile from profiles table
-            const { data, error } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', session.user.id)
-              .single();
+        // Handle session changes
+        if (newSession?.user) {
+          // Instead of fetching profile here, use setTimeout to avoid potential auth deadlocks
+          setTimeout(async () => {
+            try {
+              const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', newSession.user.id)
+                .single();
 
-            if (error) {
-              throw error;
+              if (error) {
+                console.error('Error fetching user profile:', error);
+                return;
+              }
+
+              const appUser: AppUser = {
+                id: newSession.user.id,
+                email: newSession.user.email || '',
+                name: data.name,
+                role: data.role,
+                createdAt: data.created_at
+              };
+              
+              setCurrentUser(appUser);
+            } catch (error) {
+              console.error('Error in profile fetch:', error);
+              setCurrentUser(null);
             }
-
-            const appUser: AppUser = {
-              id: session.user.id,
-              email: session.user.email || '',
-              name: data.name,
-              role: data.role,
-              createdAt: data.created_at
-            };
-            
-            setCurrentUser(appUser);
-          } catch (error) {
-            console.error('Error fetching user profile:', error);
-            setCurrentUser(null);
-          }
+          }, 0);
         } else {
           setCurrentUser(null);
         }
@@ -90,6 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           if (error) {
             console.error('Error fetching user profile:', error);
+            setLoading(false);
             return;
           }
 

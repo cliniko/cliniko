@@ -18,7 +18,17 @@ import Vitals from "./pages/Vitals";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 
-const queryClient = new QueryClient();
+// Create a custom queryClient with optimized settings
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000, // 1 minute
+      cacheTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false, // Don't refetch on window focus for better performance
+      retry: 1, // Only retry failed queries once
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -29,9 +39,11 @@ const App = () => (
             {/* Public Routes */}
             <Route path="/" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            
+            {/* Entry point for role-based routing */}
             <Route path="/index" element={<Index />} />
             
-            {/* Protected Routes */}
+            {/* Protected Routes with specific role restrictions */}
             <Route 
               element={
                 <RequireAuth>
@@ -40,6 +52,7 @@ const App = () => (
               }
             >
               <Route path="/dashboard" element={<Dashboard />} />
+              
               <Route 
                 path="/consults" 
                 element={
@@ -48,7 +61,16 @@ const App = () => (
                   </RequireAuth>
                 } 
               />
-              <Route path="/patients" element={<Patients />} />
+              
+              <Route 
+                path="/patients" 
+                element={
+                  <RequireAuth allowedRoles={['admin', 'doctor', 'nurse', 'staff']}>
+                    <Patients />
+                  </RequireAuth>
+                }
+              />
+              
               <Route 
                 path="/users" 
                 element={
@@ -57,6 +79,7 @@ const App = () => (
                   </RequireAuth>
                 } 
               />
+              
               <Route 
                 path="/vitals" 
                 element={
@@ -66,6 +89,9 @@ const App = () => (
                 } 
               />
             </Route>
+            
+            {/* Redirect root to index for role-based routing */}
+            <Route path="" element={<Navigate to="/index" replace />} />
             
             {/* 404 Route */}
             <Route path="*" element={<NotFound />} />
