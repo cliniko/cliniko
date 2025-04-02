@@ -1,9 +1,10 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Check } from "lucide-react";
+import { Loader2, Check, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Drug, DrugSelectorProps } from '@/types/clinicalTables';
@@ -111,6 +112,7 @@ const DrugSelector = ({ onDrugSelect }: DrugSelectorProps) => {
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
+    setShowDropdown(true);
   };
   
   const handleSelectDrug = (drugName: string) => {
@@ -153,7 +155,6 @@ const DrugSelector = ({ onDrugSelect }: DrugSelectorProps) => {
     );
   }
 
-  // Modify existing render logic to improve mobile responsiveness
   return (
     <div className="space-y-4 w-full">
       {error && (
@@ -165,6 +166,9 @@ const DrugSelector = ({ onDrugSelect }: DrugSelectorProps) => {
       <div className="relative w-full">
         <Label htmlFor="drugSearch" className="sr-only">Search Drug</Label>
         <div className="relative w-full">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <Search className="h-4 w-4 text-gray-400" />
+          </div>
           <Input 
             id="drugSearch"
             ref={searchInputRef}
@@ -172,7 +176,7 @@ const DrugSelector = ({ onDrugSelect }: DrugSelectorProps) => {
             value={searchTerm}
             onChange={handleSearchChange}
             onFocus={() => setShowDropdown(true)}
-            className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-medical-primary"
+            className="w-full pl-10"
           />
           <p className="text-xs text-gray-500 mt-1">{searchStats}</p>
           

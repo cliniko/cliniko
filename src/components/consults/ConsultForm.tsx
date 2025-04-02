@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,14 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
-import { CalendarIcon, Plus, X } from 'lucide-react';
+import { CalendarIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
-import DrugSelector from '@/components/medical/DrugSelector';
 import ICD10Selector from '@/components/medical/ICD10Selector';
-import PrescriptionForm from '@/components/medical/PrescriptionForm';
 import { Drug, Prescription } from '@/types/clinicalTables';
 import VitalsForm from './VitalsForm';
 import ObjectiveSection from './ObjectiveSection';
@@ -29,6 +28,11 @@ interface ObjectiveItem {
 interface PlanItem {
   id: string;
   value: string;
+}
+
+interface PatientOption {
+  id: string;
+  name: string;
 }
 
 interface ConsultFormProps {
@@ -63,8 +67,8 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
   const [bpMonitoring, setBpMonitoring] = useState<boolean>(false);
   const [hba1cMonitoring, setHba1cMonitoring] = useState<boolean>(false);
   
-  const [patients, setPatients] = useState<any[]>([]);
-  const [isLoadingPatients, setIsLoadingPatients] = useState<boolean>(false);
+  const [patients, setPatients] = useState<PatientOption[]>([]);
+  const [isLoadingPatients, setIsLoadingPatients] = useState<boolean>(true);
 
   const [selectedDrug, setSelectedDrug] = useState<Drug | null>(null);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
@@ -72,6 +76,36 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
   
   const { toast } = useToast();
   const { currentUser } = useAuth();
+
+  // Fetch patients from Supabase
+  useEffect(() => {
+    const fetchPatients = async () => {
+      setIsLoadingPatients(true);
+      try {
+        const { data, error } = await supabase
+          .from('patients')
+          .select('id, name')
+          .order('name', { ascending: true });
+          
+        if (error) throw error;
+        
+        if (data) {
+          setPatients(data);
+        }
+      } catch (error: any) {
+        console.error("Error fetching patients:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load patients data",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoadingPatients(false);
+      }
+    };
+    
+    fetchPatients();
+  }, [toast]);
 
   const handleSavePrescription = (prescription: Prescription) => {
     setPrescriptions(prev => [...prev, prescription]);
@@ -108,6 +142,15 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
   
   const handleSubmit = () => {
     try {
+      if (!patient) {
+        toast({
+          title: "Missing Patient",
+          description: "Please select a patient for this consultation",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       // Format data for Supabase
       const consultData = {
         date: date ? format(date, 'yyyy-MM-dd') : null,
@@ -208,11 +251,12 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
         <label htmlFor="patient" className="block text-sm font-medium">Patient</label>
         <Select value={patient} onValueChange={setPatient}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select patient" />
+            <SelectValue placeholder={isLoadingPatients ? "Loading patients..." : "Select patient"} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="patient1">John Doe</SelectItem>
-            <SelectItem value="patient2">Jane Smith</SelectItem>
+            {patients.map((p) => (
+              <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>

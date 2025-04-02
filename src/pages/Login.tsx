@@ -1,107 +1,140 @@
 
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
+import { Loader2 } from 'lucide-react';
 
 const Login = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { signIn, isAuthenticated, loading } = useAuth();
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const { login, loading } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  
+  useEffect(() => {
+    // Redirect if already authenticated
+    if (!loading && isAuthenticated) {
+      navigate('/index', { replace: true });
+    }
+  }, [isAuthenticated, loading, navigate]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     
     if (!email || !password) {
-      setError('Please provide both email and password');
+      toast({
+        title: "Error",
+        description: "Please enter both email and password.",
+        variant: "destructive"
+      });
       return;
     }
     
+    setIsLoading(true);
+    
     try {
-      await login(email, password);
-    } catch (err: any) {
-      setError(err.message || 'Login failed');
+      await signIn(email, password);
+      // No need to navigate here as the useEffect will handle it
+    } catch (error: any) {
+      console.error("Login error:", error);
+      toast({
+        title: "Authentication failed",
+        description: error?.message || "Invalid email or password. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
   
+  // If still checking authentication status, show loading indicator
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-medical-primary" />
+      </div>
+    );
+  }
+  
   return (
-    <div className="min-h-screen flex items-center justify-center bg-medical-light p-4">
-      <Card className="w-full max-w-md shadow-lg">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-3xl font-bold text-medical-primary">Clinic Health Data</CardTitle>
-          <CardDescription>Enter your credentials to sign in</CardDescription>
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl text-medical-primary">Clinical Management System</CardTitle>
+          <CardDescription>Sign in to access your account</CardDescription>
         </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="email" className="block text-sm font-medium">
-                Email address
-              </label>
-              <Input
-                id="email"
-                type="email"
+              <Label htmlFor="email">Email</Label>
+              <Input 
+                id="email" 
+                type="email" 
+                placeholder="name@example.com" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="doctor@example.com"
-                required
                 autoComplete="email"
-                className="w-full"
               />
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label htmlFor="password" className="block text-sm font-medium">
-                  Password
-                </label>
-                <Link
-                  to="/forgot-password"
-                  className="text-sm font-medium text-medical-primary hover:text-medical-secondary"
+                <Label htmlFor="password">Password</Label>
+                <Button 
+                  variant="link" 
+                  className="text-xs text-medical-primary p-0 h-auto font-semibold"
+                  type="button"
+                  onClick={() => toast({
+                    title: "Password Reset",
+                    description: "Please contact your administrator to reset your password."
+                  })}
                 >
                   Forgot password?
-                </Link>
+                </Button>
               </div>
-              <Input
-                id="password"
-                type="password"
+              <Input 
+                id="password" 
+                type="password" 
+                placeholder="••••••••" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full"
+                autoComplete="current-password"
               />
             </div>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button
-              type="submit"
+            <Button 
+              type="submit" 
               className="w-full bg-medical-primary hover:bg-medical-primary/90"
-              disabled={loading}
+              disabled={isLoading}
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                "Sign In"
+              )}
             </Button>
-            <div className="text-center text-sm">
-              Don't have an account?{' '}
-              <Link
-                to="/register"
-                className="font-medium text-medical-primary hover:text-medical-secondary"
-              >
-                Register here
-              </Link>
-            </div>
-          </CardFooter>
-        </form>
+          </form>
+        </CardContent>
+        <CardFooter className="flex flex-col">
+          <p className="text-center text-sm text-gray-500 mt-2">
+            Don't have an account?{" "}
+            <Button 
+              variant="link"
+              className="p-0 h-auto font-semibold text-medical-primary"
+              onClick={() => navigate('/register')}
+            >
+              Register
+            </Button>
+          </p>
+        </CardFooter>
       </Card>
     </div>
   );
