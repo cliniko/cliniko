@@ -4,11 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 import { useDebounce } from '@/hooks/use-debounce';
-
-interface ICD10Code {
-  code: string;
-  description: string;
-}
+import { ICD10Code } from '@/types/clinicalTables';
 
 interface ICD10InputProps {
   value: string;
@@ -20,8 +16,8 @@ interface ICD10InputProps {
 const ICD10Input: React.FC<ICD10InputProps> = ({ 
   value, 
   onChange, 
-  placeholder = 'Search ICD-10 codes...',
-  className
+  placeholder = 'Search ICD-10 codes...', 
+  className 
 }) => {
   const [inputValue, setInputValue] = useState(value);
   const [isFocused, setIsFocused] = useState(false);
@@ -31,20 +27,7 @@ const ICD10Input: React.FC<ICD10InputProps> = ({
   
   const debouncedSearch = useDebounce(inputValue, 300);
 
-  // Mock ICD-10 data - in a real app, this would come from an API
-  const mockICDData: ICD10Code[] = [
-    { code: 'A00', description: 'Cholera' },
-    { code: 'A01', description: 'Typhoid and paratyphoid fevers' },
-    { code: 'E11', description: 'Type 2 diabetes mellitus' },
-    { code: 'I10', description: 'Essential (primary) hypertension' },
-    { code: 'J45', description: 'Asthma' },
-    { code: 'K29', description: 'Gastritis and duodenitis' },
-    { code: 'M54', description: 'Dorsalgia' },
-    { code: 'R50', description: 'Fever of other and unknown origin' },
-    { code: 'R51', description: 'Headache' },
-    { code: 'Z71', description: 'Persons encountering health services for counseling' },
-  ];
-
+  // Update local input when external value changes
   useEffect(() => {
     setInputValue(value);
   }, [value]);
@@ -62,24 +45,42 @@ const ICD10Input: React.FC<ICD10InputProps> = ({
     };
   }, []);
 
+  // Fetch ICD-10 codes from the API
   useEffect(() => {
-    if (!debouncedSearch || debouncedSearch.length < 2) {
-      setResults([]);
-      setIsSearching(false);
-      return;
-    }
+    const fetchICD10Codes = async () => {
+      if (!debouncedSearch || debouncedSearch.length < 2) {
+        setResults([]);
+        setIsSearching(false);
+        return;
+      }
 
-    setIsSearching(true);
-    
-    // Simulate API call - replace with real API call in production
-    setTimeout(() => {
-      const filtered = mockICDData.filter(
-        item => item.code.toLowerCase().includes(debouncedSearch.toLowerCase()) || 
-               item.description.toLowerCase().includes(debouncedSearch.toLowerCase())
-      );
-      setResults(filtered);
-      setIsSearching(false);
-    }, 300);
+      setIsSearching(true);
+      try {
+        const apiUrl = `https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?sf=code,name&terms=${encodeURIComponent(debouncedSearch)}&maxList=10`;
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        
+        // API returns [total, [codes], null, [[code, description], ...]]
+        if (Array.isArray(data) && data.length >= 4) {
+          const codes = data[1];
+          const descriptions = data[3];
+          
+          const formattedResults: ICD10Code[] = codes.map((code: string, index: number) => ({
+            code,
+            description: descriptions[index][1]
+          }));
+          
+          setResults(formattedResults);
+        }
+      } catch (error) {
+        console.error('Error fetching ICD-10 codes:', error);
+        setResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    fetchICD10Codes();
   }, [debouncedSearch]);
 
   const handleSelectCode = (item: ICD10Code) => {

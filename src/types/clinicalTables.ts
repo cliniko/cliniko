@@ -1,3 +1,4 @@
+
 // Clinical tables types
 
 export interface Drug {
@@ -29,4 +30,9 @@ export interface DrugSelectorProps {
 export interface ICD10Code {
   code: string;
   description: string;
+}
+
+export interface ICD10SelectorProps {
+  value: string;
+  onChange: (value: string) => void;
 }
