@@ -112,6 +112,7 @@ const ICD10Selector: React.FC<ICD10SelectorProps> = ({ value, onChange }) => {
                     key={item.code}
                     value={`${item.code}-${item.description}`}
                     onSelect={() => handleSelectCode(item)}
+                    className="cursor-pointer"
                   >
                     <Check
                       className={cn(

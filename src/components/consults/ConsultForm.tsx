@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
@@ -32,6 +33,12 @@ interface PlanItem {
 interface PatientOption {
   id: string;
   name: string;
+}
+
+interface StaffOption {
+  id: string;
+  name: string;
+  role: string;
 }
 
 interface ConsultFormProps {
@@ -68,6 +75,9 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
   
   const [patients, setPatients] = useState<PatientOption[]>([]);
   const [isLoadingPatients, setIsLoadingPatients] = useState<boolean>(true);
+  
+  const [medicalStaff, setMedicalStaff] = useState<StaffOption[]>([]);
+  const [isLoadingStaff, setIsLoadingStaff] = useState<boolean>(true);
 
   const [selectedDrug, setSelectedDrug] = useState<Drug | null>(null);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
@@ -112,6 +122,36 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
     };
     
     fetchPatients();
+  }, [toast]);
+
+  // Fetch medical staff from profiles table
+  useEffect(() => {
+    const fetchMedicalStaff = async () => {
+      setIsLoadingStaff(true);
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, name, role')
+          .order('name', { ascending: true });
+          
+        if (error) throw error;
+        
+        if (data) {
+          setMedicalStaff(data);
+        }
+      } catch (error: any) {
+        console.error("Error fetching medical staff:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load medical staff data",
+          variant: "destructive"
+        });
+      } finally {
+        setIsLoadingStaff(false);
+      }
+    };
+    
+    fetchMedicalStaff();
   }, [toast]);
 
   const handleSavePrescription = (prescription: Prescription) => {
@@ -206,6 +246,14 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
     }
   };
 
+  // Filter medical staff by role
+  const physicians = medicalStaff.filter(staff => 
+    staff.role === 'doctor' || staff.role === 'admin'
+  );
+  
+  const nurses = medicalStaff.filter(staff => 
+    staff.role === 'nurse' || staff.role === 'staff'
+  );
   
   return (
     
@@ -335,22 +383,48 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <label htmlFor="attendingNurse" className="block text-sm font-medium">Attending Nurse</label>
-          <Input 
-            id="attendingNurse" 
-            className="w-full" 
-            value={attendingNurse}
-            onChange={e => setAttendingNurse(e.target.value)}
-          />
+          <Select value={attendingNurse} onValueChange={setAttendingNurse}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder={isLoadingStaff ? "Loading nurses..." : "Select nurse"} />
+            </SelectTrigger>
+            <SelectContent>
+              {isLoadingStaff ? (
+                <div className="flex items-center justify-center py-2">
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <span>Loading...</span>
+                </div>
+              ) : (
+                nurses.map((nurse) => (
+                  <SelectItem key={nurse.id} value={nurse.id}>{nurse.name}</SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
         </div>
         
         <div className="space-y-2">
           <label htmlFor="attendingPhysician" className="block text-sm font-medium">Attending Physician</label>
-          <Input 
-            id="attendingPhysician" 
-            className="w-full" 
-            value={attendingPhysician || (currentUser?.name || '')}
-            onChange={e => setAttendingPhysician(e.target.value)}
-          />
+          <Select 
+            value={attendingPhysician} 
+            onValueChange={setAttendingPhysician}
+            defaultValue={currentUser?.id}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder={isLoadingStaff ? "Loading physicians..." : "Select physician"} />
+            </SelectTrigger>
+            <SelectContent>
+              {isLoadingStaff ? (
+                <div className="flex items-center justify-center py-2">
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  <span>Loading...</span>
+                </div>
+              ) : (
+                physicians.map((physician) => (
+                  <SelectItem key={physician.id} value={physician.id}>{physician.name}</SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
         </div>
       </div>
       
