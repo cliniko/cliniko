@@ -1,11 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Textarea } from "@/components/ui/textarea";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Check, ChevronsUpDown, Loader2 } from 'lucide-react';
-import { ICD10Code } from '@/types/clinicalTables';
+import { Label } from "@/components/ui/label";
 import { cn } from '@/lib/utils';
 
 interface ICD10SelectorProps {
@@ -14,57 +10,91 @@ interface ICD10SelectorProps {
 }
 
 const ICD10Selector: React.FC<ICD10SelectorProps> = ({ value, onChange }) => {
-  const [open, setOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [results, setResults] = useState<ICD10Code[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const autocompleterInitialized = useRef(false);
   
-  // Fetch ICD-10 codes from the API
   useEffect(() => {
-    const fetchICD10Codes = async () => {
-      if (!searchTerm || searchTerm.length < 2) {
-        setResults([]);
-        return;
-      }
-
-      setIsLoading(true);
-      try {
-        const apiUrl = `https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?sf=code,name&terms=${encodeURIComponent(searchTerm)}&maxList=10`;
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-        
-        // API returns [total, [codes], null, [[code, description], ...]]
-        if (Array.isArray(data) && data.length >= 4) {
-          const codes = data[1];
-          const descriptions = data[3];
-          
-          const formattedResults: ICD10Code[] = codes.map((code: string, index: number) => ({
-            code,
-            description: descriptions[index][1]
-          }));
-          
-          setResults(formattedResults);
-        }
-      } catch (error) {
-        console.error('Error fetching ICD-10 codes:', error);
-        setResults([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    const timer = setTimeout(fetchICD10Codes, 300);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  const handleSelectCode = (code: ICD10Code) => {
-    const formattedCode = `${code.code} - ${code.description}`;
+    // Check if the required libraries are loaded
+    if (!window.Def || !window.jQuery) {
+      loadExternalResources().then(() => {
+        initializeAutocompleter();
+      });
+    } else if (!autocompleterInitialized.current) {
+      initializeAutocompleter();
+    }
     
-    // If there's already some text, add a new line before the new code
-    const newValue = value ? `${value}\n${formattedCode}` : formattedCode;
-    onChange(newValue);
-    setOpen(false);
-    setSearchTerm('');
+    return () => {
+      // Clean up if needed
+    };
+  }, []);
+
+  const loadExternalResources = async () => {
+    // Load jQuery if not already loaded
+    if (!window.jQuery) {
+      const jqueryScript = document.createElement('script');
+      jqueryScript.src = 'https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js';
+      jqueryScript.async = true;
+      document.head.appendChild(jqueryScript);
+      
+      await new Promise<void>((resolve) => {
+        jqueryScript.onload = () => resolve();
+      });
+    }
+    
+    // Load autocomplete-lhc script if not already loaded
+    if (!window.Def) {
+      const autocompleteScript = document.createElement('script');
+      autocompleteScript.src = 'https://lhcforms-static.nlm.nih.gov/autocomplete-lhc-versions/17.0.3/autocomplete-lhc.min.js';
+      autocompleteScript.async = true;
+      document.head.appendChild(autocompleteScript);
+      
+      const autocompleteCss = document.createElement('link');
+      autocompleteCss.rel = 'stylesheet';
+      autocompleteCss.href = 'https://lhcforms-static.nlm.nih.gov/autocomplete-lhc-versions/17.0.3/autocomplete-lhc.min.css';
+      document.head.appendChild(autocompleteCss);
+      
+      await new Promise<void>((resolve) => {
+        autocompleteScript.onload = () => resolve();
+      });
+    }
+  };
+
+  const initializeAutocompleter = () => {
+    if (inputRef.current && window.Def && window.jQuery) {
+      try {
+        const autocompleter = new window.Def.Autocompleter.Search(
+          inputRef.current.id,
+          'https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?sf=code,name',
+          {
+            tableFormat: true,
+            valueCols: [0],
+            colHeaders: ['Code', 'Name'],
+            maxSelect: 1,
+            matchListValue: true,
+            autoFill: true,
+            allowFreeText: true,
+            freeTextRule: 'match',
+            valueSelector: function(item: any) {
+              return `${item[0]} - ${item[1]}`; // Combine code and description
+            },
+            afterMatch: function(item: any) {
+              const formattedCode = `${item[0]} - ${item[1]}`;
+              // If there's already some text, add a new line before the new code
+              const newValue = value ? `${value}\n${formattedCode}` : formattedCode;
+              onChange(newValue);
+            }
+          }
+        );
+        
+        autocompleterInitialized.current = true;
+      } catch (error) {
+        console.error('Error initializing autocompleter:', error);
+      }
+    }
+  };
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onChange(e.target.value);
   };
 
   return (
@@ -73,68 +103,39 @@ const ICD10Selector: React.FC<ICD10SelectorProps> = ({ value, onChange }) => {
         placeholder="Enter assessment or select ICD-10 codes..."
         className="min-h-[120px] w-full"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={handleTextareaChange}
       />
       
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button 
-            variant="outline" 
-            role="combobox" 
-            aria-expanded={open}
-            className="w-full justify-between"
-          >
-            {searchTerm || "Search ICD-10 Codes"}
-            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-full p-0" align="start">
-          <Command>
-            <CommandInput 
-              placeholder="Search by code or description..." 
-              value={searchTerm}
-              onValueChange={setSearchTerm}
-            />
-            <CommandList>
-              <CommandEmpty>
-                {isLoading ? (
-                  <div className="flex items-center justify-center p-2">
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    <span>Searching...</span>
-                  </div>
-                ) : (
-                  <span>No results found.</span>
-                )}
-              </CommandEmpty>
-              <CommandGroup>
-                {results.map((item) => (
-                  <CommandItem
-                    key={item.code}
-                    value={`${item.code}-${item.description}`}
-                    onSelect={() => handleSelectCode(item)}
-                    className="cursor-pointer"
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        value.includes(item.code) ? "opacity-100" : "opacity-0"
-                      )}
-                    />
-                    <span className="font-medium mr-2">{item.code}</span>
-                    <span className="text-sm text-muted-foreground">{item.description}</span>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+      <div className="relative">
+        <Label htmlFor="icd10-search">Search ICD-10 Codes</Label>
+        <input
+          id="icd10-search"
+          ref={inputRef}
+          type="text"
+          placeholder="Type to search ICD-10 codes..."
+          className={cn(
+            "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm",
+            "ring-offset-background file:border-0 file:bg-transparent",
+            "file:text-sm file:font-medium placeholder:text-muted-foreground",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+            "focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          )}
+        />
+      </div>
       
       <p className="text-xs text-muted-foreground">
-        Enter directly or search ICD-10 codes by code or description (e.g., "E11" or "diabetes")
+        Search ICD-10 codes by code or description (e.g., "E11" or "diabetes")
       </p>
     </div>
   );
 };
+
+// Add TypeScript declarations for the external libraries
+declare global {
+  interface Window {
+    Def: any;
+    jQuery: any;
+  }
+}
 
 export default ICD10Selector;

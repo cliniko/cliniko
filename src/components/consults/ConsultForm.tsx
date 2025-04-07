@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -86,7 +85,7 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
   const { toast } = useToast();
   const { currentUser } = useAuth();
 
-  // Set current time on component mount
+  // Set current time on component mount with correct format
   useEffect(() => {
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, '0');
@@ -124,7 +123,7 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
     fetchPatients();
   }, [toast]);
 
-  // Fetch medical staff from profiles table
+  // Fetch medical staff from profiles table - filtered by role
   useEffect(() => {
     const fetchMedicalStaff = async () => {
       setIsLoadingStaff(true);
@@ -132,12 +131,21 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
         const { data, error } = await supabase
           .from('profiles')
           .select('id, name, role')
+          .in('role', ['doctor', 'nurse', 'admin', 'staff'])
           .order('name', { ascending: true });
           
         if (error) throw error;
         
         if (data) {
           setMedicalStaff(data);
+          
+          // Set current user as attending physician if they are a doctor or admin
+          if (currentUser) {
+            const currentUserData = data.find(staff => staff.id === currentUser.id);
+            if (currentUserData && (currentUserData.role === 'doctor' || currentUserData.role === 'admin')) {
+              setAttendingPhysician(currentUser.id);
+            }
+          }
         }
       } catch (error: any) {
         console.error("Error fetching medical staff:", error);
@@ -152,7 +160,7 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
     };
     
     fetchMedicalStaff();
-  }, [toast]);
+  }, [toast, currentUser]);
 
   const handleSavePrescription = (prescription: Prescription) => {
     setPrescriptions(prev => [...prev, prescription]);

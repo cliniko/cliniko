@@ -1,10 +1,7 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
-import { useDebounce } from '@/hooks/use-debounce';
-import { ICD10Code } from '@/types/clinicalTables';
+import React, { useEffect, useRef } from 'react';
+import { cn } from '@/lib/utils';
+import { Label } from "@/components/ui/label";
 
 interface ICD10InputProps {
   value: string;
@@ -19,117 +16,122 @@ const ICD10Input: React.FC<ICD10InputProps> = ({
   placeholder = 'Search ICD-10 codes...', 
   className 
 }) => {
-  const [inputValue, setInputValue] = useState(value);
-  const [isFocused, setIsFocused] = useState(false);
-  const [isSearching, setIsSearching] = useState(false);
-  const [results, setResults] = useState<ICD10Code[]>([]);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const autocompleterInitialized = useRef(false);
   
-  const debouncedSearch = useDebounce(inputValue, 300);
-
-  // Update local input when external value changes
   useEffect(() => {
-    setInputValue(value);
-  }, [value]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsFocused(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
+    // Check if the required libraries are loaded
+    if (!window.Def || !window.jQuery) {
+      loadExternalResources().then(() => {
+        initializeAutocompleter();
+      });
+    } else if (!autocompleterInitialized.current) {
+      initializeAutocompleter();
+    }
+    
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      // Clean up if needed
     };
   }, []);
 
-  // Fetch ICD-10 codes from the API
-  useEffect(() => {
-    const fetchICD10Codes = async () => {
-      if (!debouncedSearch || debouncedSearch.length < 2) {
-        setResults([]);
-        setIsSearching(false);
-        return;
-      }
+  const loadExternalResources = async () => {
+    // Load jQuery if not already loaded
+    if (!window.jQuery) {
+      const jqueryScript = document.createElement('script');
+      jqueryScript.src = 'https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js';
+      jqueryScript.async = true;
+      document.head.appendChild(jqueryScript);
+      
+      await new Promise<void>((resolve) => {
+        jqueryScript.onload = () => resolve();
+      });
+    }
+    
+    // Load autocomplete-lhc script if not already loaded
+    if (!window.Def) {
+      const autocompleteScript = document.createElement('script');
+      autocompleteScript.src = 'https://lhcforms-static.nlm.nih.gov/autocomplete-lhc-versions/17.0.3/autocomplete-lhc.min.js';
+      autocompleteScript.async = true;
+      document.head.appendChild(autocompleteScript);
+      
+      const autocompleteCss = document.createElement('link');
+      autocompleteCss.rel = 'stylesheet';
+      autocompleteCss.href = 'https://lhcforms-static.nlm.nih.gov/autocomplete-lhc-versions/17.0.3/autocomplete-lhc.min.css';
+      document.head.appendChild(autocompleteCss);
+      
+      await new Promise<void>((resolve) => {
+        autocompleteScript.onload = () => resolve();
+      });
+    }
+  };
 
-      setIsSearching(true);
+  const initializeAutocompleter = () => {
+    if (inputRef.current && window.Def && window.jQuery) {
       try {
-        const apiUrl = `https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?sf=code,name&terms=${encodeURIComponent(debouncedSearch)}&maxList=10`;
-        const response = await fetch(apiUrl);
-        const data = await response.json();
+        const autocompleter = new window.Def.Autocompleter.Search(
+          inputRef.current.id,
+          'https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?sf=code,name',
+          {
+            tableFormat: true,
+            valueCols: [0],
+            colHeaders: ['Code', 'Name'],
+            maxSelect: 1,
+            matchListValue: true,
+            autoFill: true,
+            allowFreeText: true,
+            freeTextRule: 'match',
+            valueSelector: function(item: any) {
+              return `${item[0]} - ${item[1]}`; // Combine code and description
+            }
+          }
+        );
         
-        // API returns [total, [codes], null, [[code, description], ...]]
-        if (Array.isArray(data) && data.length >= 4) {
-          const codes = data[1];
-          const descriptions = data[3];
-          
-          const formattedResults: ICD10Code[] = codes.map((code: string, index: number) => ({
-            code,
-            description: descriptions[index][1]
-          }));
-          
-          setResults(formattedResults);
+        // Set up event listener for when an item is selected
+        if (inputRef.current) {
+          inputRef.current.addEventListener('autocomplete:selected', (event: any) => {
+            if (event.detail && event.detail.itemData) {
+              const selectedItem = event.detail.itemData;
+              const formattedCode = `${selectedItem[0]} - ${selectedItem[1]}`;
+              onChange(formattedCode);
+            }
+          });
         }
+        
+        autocompleterInitialized.current = true;
       } catch (error) {
-        console.error('Error fetching ICD-10 codes:', error);
-        setResults([]);
-      } finally {
-        setIsSearching(false);
+        console.error('Error initializing autocompleter:', error);
       }
-    };
-
-    fetchICD10Codes();
-  }, [debouncedSearch]);
-
-  const handleSelectCode = (item: ICD10Code) => {
-    const formattedValue = `${item.code} - ${item.description}`;
-    setInputValue(formattedValue);
-    onChange(formattedValue);
-    setIsFocused(false);
-    setResults([]);
+    }
   };
 
   return (
-    <div ref={containerRef} className="relative w-full">
-      <Input
-        value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
-        onFocus={() => setIsFocused(true)}
+    <div className="relative w-full">
+      <input
+        id="icd10-input"
+        ref={inputRef}
+        type="text"
+        value={value}
         placeholder={placeholder}
-        className={className}
+        className={cn(
+          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm",
+          "ring-offset-background file:border-0 file:bg-transparent",
+          "file:text-sm file:font-medium placeholder:text-muted-foreground",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          "focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          className
+        )}
+        onChange={(e) => onChange(e.target.value)}
       />
-      
-      {isFocused && (inputValue.length > 1 || results.length > 0) && (
-        <Card className="absolute z-50 mt-1 max-h-60 w-full overflow-auto border shadow-lg">
-          {isSearching ? (
-            <div className="flex items-center justify-center p-4">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              <span>Searching...</span>
-            </div>
-          ) : results.length > 0 ? (
-            <ul className="py-1">
-              {results.map((item) => (
-                <li 
-                  key={item.code}
-                  className="cursor-pointer px-4 py-2 hover:bg-gray-100"
-                  onClick={() => handleSelectCode(item)}
-                >
-                  <span className="font-medium">{item.code}</span>
-                  <span> - {item.description}</span>
-                </li>
-              ))}
-            </ul>
-          ) : inputValue.length > 1 ? (
-            <div className="p-4 text-center text-gray-500">
-              No results found
-            </div>
-          ) : null}
-        </Card>
-      )}
     </div>
   );
 };
+
+// Add TypeScript declarations for the external libraries
+declare global {
+  interface Window {
+    Def: any;
+    jQuery: any;
+  }
+}
 
 export default ICD10Input;
