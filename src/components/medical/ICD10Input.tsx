@@ -88,6 +88,7 @@ const ICD10Input: React.FC<ICD10InputProps> = ({
     setInputValue(formattedValue);
     onChange(formattedValue);
     setIsFocused(false);
+    setResults([]);
   };
 
   return (
