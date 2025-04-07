@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
-import ICD10Selector from '@/components/medical/ICD10Selector';
+import ICD10Input from '@/components/medical/ICD10Input';
 import { Drug, Prescription } from '@/types/clinicalTables';
 import VitalsForm from './VitalsForm';
 import ObjectiveSection from './ObjectiveSection';
@@ -370,7 +370,15 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
       
       <div className="space-y-2">
         <label className="block text-sm font-medium">Assessment (ICD-10 Codes)</label>
-        <ICD10Selector value={assessment} onChange={setAssessment} />
+        <ICD10Input 
+          value={assessment} 
+          onChange={setAssessment} 
+          placeholder="Start typing to search and select ICD-10 codes..."
+          minHeight="120px"
+        />
+        <p className="text-xs text-muted-foreground">
+          Search by code (e.g., "E11") or description (e.g., "diabetes")
+        </p>
       </div>
       
       <PlanSection

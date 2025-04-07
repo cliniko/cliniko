@@ -54,11 +54,12 @@ const AssessmentSection: React.FC<AssessmentSectionProps> = ({ assessment, onCha
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="icd10Code">ICD-10 Code</Label>
+          <Label htmlFor="icd10-input">Assessment (ICD-10 Codes)</Label>
           <ICD10Input
             value={assessment.icd10Code || ''}
             onChange={handleICD10Change}
-            placeholder="Search and select ICD-10 code..."
+            placeholder="Start typing to search and select ICD-10 codes..."
+            minHeight="120px"
           />
           <p className="text-xs text-gray-500 mt-1">
             Search by code (e.g., "E11") or description (e.g., "diabetes")

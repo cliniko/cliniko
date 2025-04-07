@@ -2,21 +2,24 @@
 import React, { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Label } from "@/components/ui/label";
+import { Textarea } from '@/components/ui/textarea';
 
 interface ICD10InputProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  minHeight?: string;
 }
 
 const ICD10Input: React.FC<ICD10InputProps> = ({ 
   value, 
   onChange, 
   placeholder = 'Search ICD-10 codes...', 
-  className 
+  className,
+  minHeight = '80px'
 }) => {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const autocompleterInitialized = useRef(false);
   
   useEffect(() => {
@@ -82,20 +85,27 @@ const ICD10Input: React.FC<ICD10InputProps> = ({
             freeTextRule: 'match',
             valueSelector: function(item: any) {
               return `${item[0]} - ${item[1]}`; // Combine code and description
+            },
+            // Add this to handle selection directly
+            afterMatch: function(item: any) {
+              if (!item || !Array.isArray(item) || item.length < 2) return;
+              
+              const selectedCode = `${item[0]} - ${item[1]}`;
+              let newValue = value;
+              
+              // If there's existing text, add the code on a new line
+              if (value && !value.endsWith('\n')) {
+                newValue = `${value}\n${selectedCode}`;
+              } else if (value) {
+                newValue = `${value}${selectedCode}`;
+              } else {
+                newValue = selectedCode;
+              }
+              
+              onChange(newValue);
             }
           }
         );
-        
-        // Set up event listener for when an item is selected
-        if (inputRef.current) {
-          inputRef.current.addEventListener('autocomplete:selected', (event: any) => {
-            if (event.detail && event.detail.itemData) {
-              const selectedItem = event.detail.itemData;
-              const formattedCode = `${selectedItem[0]} - ${selectedItem[1]}`;
-              onChange(formattedCode);
-            }
-          });
-        }
         
         autocompleterInitialized.current = true;
       } catch (error) {
@@ -106,18 +116,13 @@ const ICD10Input: React.FC<ICD10InputProps> = ({
 
   return (
     <div className="relative w-full">
-      <input
+      <Textarea
         id="icd10-input"
         ref={inputRef}
-        type="text"
         value={value}
         placeholder={placeholder}
         className={cn(
-          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm",
-          "ring-offset-background file:border-0 file:bg-transparent",
-          "file:text-sm file:font-medium placeholder:text-muted-foreground",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          "focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          `min-h-[${minHeight}] w-full`,
           className
         )}
         onChange={(e) => onChange(e.target.value)}
