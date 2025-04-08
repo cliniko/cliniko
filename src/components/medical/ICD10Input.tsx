@@ -1,7 +1,6 @@
 
 import React, { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
-import { Label } from "@/components/ui/label";
 import { Textarea } from '@/components/ui/textarea';
 
 interface ICD10InputProps {
@@ -86,8 +85,7 @@ const ICD10Input: React.FC<ICD10InputProps> = ({
             valueSelector: function(item: any) {
               return `${item[0]} - ${item[1]}`; // Combine code and description
             },
-            // Add this to handle selection directly
-            afterMatch: function(item: any) {
+            select: function(item: any) {
               if (!item || !Array.isArray(item) || item.length < 2) return;
               
               const selectedCode = `${item[0]} - ${item[1]}`;
@@ -103,6 +101,7 @@ const ICD10Input: React.FC<ICD10InputProps> = ({
               }
               
               onChange(newValue);
+              return false; // Prevent default behavior
             }
           }
         );

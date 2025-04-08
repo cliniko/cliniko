@@ -1,6 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
-import { Label } from "@/components/ui/label";
+import React from 'react';
 import { cn } from '@/lib/utils';
 import ICD10Input from './ICD10Input';
 
@@ -15,12 +14,12 @@ const ICD10Selector: React.FC<ICD10SelectorProps> = ({ value, onChange }) => {
       <ICD10Input
         value={value}
         onChange={onChange}
-        placeholder="Type to search and enter ICD-10 codes..."
+        placeholder="Search ICD-10 codes by code or description..."
         minHeight="120px"
       />
       
       <p className="text-xs text-muted-foreground">
-        Search ICD-10 codes by code or description (e.g., "E11" or "diabetes")
+        Search and select ICD-10 codes (e.g., "E11" for diabetes)
       </p>
     </div>
   );

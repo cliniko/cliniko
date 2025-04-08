@@ -324,11 +324,6 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
             ))}
           </SelectContent>
         </Select>
-        {patient && (
-          <p className="text-xs text-muted-foreground mt-1">
-            Selected patient ID: {patient}
-          </p>
-        )}
       </div>
       
       <div className="space-y-2">
@@ -373,11 +368,11 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
         <ICD10Input 
           value={assessment} 
           onChange={setAssessment} 
-          placeholder="Start typing to search and select ICD-10 codes..."
+          placeholder="Search and select ICD-10 codes..."
           minHeight="120px"
         />
         <p className="text-xs text-muted-foreground">
-          Search by code (e.g., "E11") or description (e.g., "diabetes")
+          Search and click to select ICD-10 codes
         </p>
       </div>
       
@@ -404,16 +399,9 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
               <SelectValue placeholder={isLoadingStaff ? "Loading nurses..." : "Select nurse"} />
             </SelectTrigger>
             <SelectContent>
-              {isLoadingStaff ? (
-                <div className="flex items-center justify-center py-2">
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  <span>Loading...</span>
-                </div>
-              ) : (
-                nurses.map((nurse) => (
-                  <SelectItem key={nurse.id} value={nurse.id}>{nurse.name}</SelectItem>
-                ))
-              )}
+              {nurses.map((nurse) => (
+                <SelectItem key={nurse.id} value={nurse.id}>{nurse.name}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -429,16 +417,9 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
               <SelectValue placeholder={isLoadingStaff ? "Loading physicians..." : "Select physician"} />
             </SelectTrigger>
             <SelectContent>
-              {isLoadingStaff ? (
-                <div className="flex items-center justify-center py-2">
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  <span>Loading...</span>
-                </div>
-              ) : (
-                physicians.map((physician) => (
-                  <SelectItem key={physician.id} value={physician.id}>{physician.name}</SelectItem>
-                ))
-              )}
+              {physicians.map((physician) => (
+                <SelectItem key={physician.id} value={physician.id}>{physician.name}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
