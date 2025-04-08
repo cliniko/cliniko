@@ -75,14 +75,15 @@ const ICD10Input: React.FC<ICD10InputProps> = ({
           'https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?sf=code,name',
           {
             tableFormat: true,
-            valueCols: [0],
+            valueCols: [0, 1],  // Include both code and name columns
             colHeaders: ['Code', 'Name'],
             maxSelect: 1,
             matchListValue: true,
-            autoFill: true,
+            autoFill: false,  // Don't auto-fill to allow full selection
             allowFreeText: true,
             freeTextRule: 'match',
             valueSelector: function(item: any) {
+              if (!item || !Array.isArray(item) || item.length < 2) return "";
               return `${item[0]} - ${item[1]}`; // Combine code and description
             },
             select: function(item: any) {
@@ -105,6 +106,11 @@ const ICD10Input: React.FC<ICD10InputProps> = ({
             }
           }
         );
+        
+        // Add a click handler to the list items
+        window.jQuery(document).on('click', '.autocomplete-lhc li', function() {
+          // The item click is handled by the autocompleter, no need for additional handling
+        });
         
         autocompleterInitialized.current = true;
       } catch (error) {

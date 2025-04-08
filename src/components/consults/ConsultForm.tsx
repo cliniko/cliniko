@@ -372,7 +372,7 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
           minHeight="120px"
         />
         <p className="text-xs text-muted-foreground">
-          Search and click to select ICD-10 codes
+          Type to search, then click on a code from the dropdown to add it
         </p>
       </div>
       

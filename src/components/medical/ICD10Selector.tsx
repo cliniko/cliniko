@@ -19,7 +19,7 @@ const ICD10Selector: React.FC<ICD10SelectorProps> = ({ value, onChange }) => {
       />
       
       <p className="text-xs text-muted-foreground">
-        Search and select ICD-10 codes (e.g., "E11" for diabetes)
+        Search and click on an ICD-10 code from the dropdown to add it (e.g., "E11" for diabetes)
       </p>
     </div>
   );
