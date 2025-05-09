@@ -1,49 +1,15 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Menu, X, Home, Users, ClipboardList, UserCog, Activity } from 'lucide-react';
+import { Home, Users, ClipboardList, UserCog, Activity, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-  DrawerClose,
-} from '@/components/ui/drawer';
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-
-type NavItem = {
-  label: string;
-  href: string;
-  icon: React.ElementType;
-  roles?: string[];
-};
-
-const navItems: NavItem[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: Home },
-  { label: 'Patients', href: '/patients', icon: Users },
-  { label: 'Consults', href: '/consults', icon: ClipboardList, roles: ['admin', 'doctor', 'nurse'] },
-  { label: 'Vitals', href: '/vitals', icon: Activity, roles: ['admin', 'doctor', 'nurse'] },
-  { label: 'Users', href: '/users', icon: UserCog, roles: ['admin'] },
-];
+import { Button } from '@/components/ui/button';
 
 const MobileNavigation = () => {
-  const [open, setOpen] = useState(false);
-  const { currentUser } = useAuth();
-
-  const canAccess = (item: NavItem) => {
-    if (!item.roles || item.roles.length === 0) return true;
-    return currentUser && item.roles.includes(currentUser.role);
-  };
-
-  const handleNavClick = () => {
-    setOpen(false);
-  };
-
-  // Get user initials for avatar
+  const { logout, currentUser } = useAuth();
+  
   const getUserInitials = () => {
     if (!currentUser?.name) return 'U';
     return currentUser.name
@@ -54,93 +20,88 @@ const MobileNavigation = () => {
       .substring(0, 2);
   };
 
+  const navItems = [
+    { 
+      label: 'Dashboard', 
+      href: '/dashboard', 
+      icon: Home,
+      roles: [] // Empty means available to all
+    },
+    { 
+      label: 'Patients', 
+      href: '/patients', 
+      icon: Users,
+      roles: [] // Empty means available to all
+    },
+    { 
+      label: 'Consults', 
+      href: '/consults', 
+      icon: ClipboardList, 
+      roles: ['admin', 'doctor', 'nurse'] 
+    },
+    { 
+      label: 'Vitals', 
+      href: '/vitals', 
+      icon: Activity, 
+      roles: ['admin', 'doctor', 'nurse'] 
+    },
+    { 
+      label: 'Users', 
+      href: '/users', 
+      icon: UserCog, 
+      roles: ['admin'] 
+    },
+  ];
+
+  const canAccess = (item: typeof navItems[0]) => {
+    if (!item.roles || item.roles.length === 0) return true;
+    return currentUser && item.roles.includes(currentUser.role);
+  };
+
   return (
-    <Drawer open={open} onOpenChange={setOpen}>
-      <DrawerTrigger asChild>
+    <div className="w-full">
+      <div className="flex items-center justify-between p-2">
+        <div className="flex items-center space-x-2">
+          <Avatar className="h-8 w-8 bg-sky-500 text-white">
+            <AvatarFallback>{getUserInitials()}</AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col">
+            <span className="text-sky-900 font-medium text-sm">Clinic Health</span>
+            {currentUser && (
+              <span className="text-xs text-sky-600">{currentUser.name}</span>
+            )}
+          </div>
+        </div>
         <Button 
           variant="ghost" 
-          size="icon" 
-          className="z-50 hover:bg-gray-100 active:scale-95 transition-all dark:hover:bg-gray-800"
+          size="sm"
+          className="text-sky-600" 
+          onClick={logout}
         >
-          <Menu className="h-5 w-5" />
-          <span className="sr-only">Toggle menu</span>
+          <LogOut className="h-4 w-4" />
+          <span className="sr-only">Sign Out</span>
         </Button>
-      </DrawerTrigger>
-      
-      <DrawerContent className="h-[85vh] rounded-t-xl">
-        <DrawerHeader className="border-b pb-3">
-          <div className="flex items-center justify-between">
-            <DrawerTitle className="text-xl font-bold text-medical-primary">
-              Clinic Health Data
-            </DrawerTitle>
-            
-            <DrawerClose asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
-                <X className="h-5 w-5" />
-                <span className="sr-only">Close menu</span>
-              </Button>
-            </DrawerClose>
-          </div>
-          
-          {currentUser && (
-            <div className="flex items-center space-x-2 mt-2 p-2 rounded-md bg-gray-50 dark:bg-gray-800">
-              <Avatar className="h-8 w-8 bg-medical-primary text-white">
-                <AvatarFallback>{getUserInitials()}</AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col">
-                <span className="text-sm font-medium">{currentUser.name}</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">{currentUser.role}</span>
-              </div>
-            </div>
-          )}
-        </DrawerHeader>
-        
-        <nav className="p-4">
-          <ul className="space-y-2">
-            {navItems.filter(canAccess).map((item) => (
-              <li key={item.href}>
-                <NavLink
-                  to={item.href}
-                  onClick={handleNavClick}
-                  className={({ isActive }) =>
-                    cn(
-                      "flex items-center gap-3 px-4 py-3 rounded-lg text-base font-medium transition-colors",
-                      isActive
-                        ? "bg-medical-light text-medical-primary"
-                        : "hover:bg-gray-100 dark:hover:bg-gray-800"
-                    )
-                  }
-                >
-                  <item.icon className="h-5 w-5" />
-                  <span>{item.label}</span>
-                </NavLink>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        
-        <div className="mt-auto p-4 border-t">
-          <Button 
-            variant="destructive" 
-            className="w-full justify-center" 
-            onClick={() => {
-              setOpen(false);
-              if (currentUser) {
-                // This assumes there's a logout function in the auth context
-                // You would need to add this or handle it differently
-                try {
-                  // Handle logout
-                } catch (error) {
-                  console.error('Logout failed:', error);
-                }
-              }
-            }}
+      </div>
+      <div className="flex justify-around px-1 py-2 border-t">
+        {navItems.filter(canAccess).map((item) => (
+          <NavLink
+            key={item.href}
+            to={item.href}
+            className={({ isActive }) =>
+              cn(
+                "flex flex-col items-center justify-center rounded-md py-2 px-3 text-xs font-medium",
+                isActive
+                  ? "bg-sky-100 text-sky-600"
+                  : "text-sky-800 hover:bg-sky-50"
+              )
+            }
           >
-            Sign Out
-          </Button>
-        </div>
-      </DrawerContent>
-    </Drawer>
+            <item.icon className="h-5 w-5 mb-1" />
+            <span>{item.label}</span>
+          </NavLink>
+        ))}
+      </div>
+    </div>
   );
 };
 
