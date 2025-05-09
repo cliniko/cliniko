@@ -2,7 +2,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Home, Users, ClipboardList, UserCog, Activity, LogOut } from 'lucide-react';
+import { Home, Users, FileText, Activity, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -36,7 +36,7 @@ const MobileNavigation = () => {
     { 
       label: 'Consults', 
       href: '/consults', 
-      icon: ClipboardList, 
+      icon: FileText, 
       roles: ['admin', 'doctor', 'nurse'] 
     },
     { 
@@ -48,7 +48,7 @@ const MobileNavigation = () => {
     { 
       label: 'Users', 
       href: '/users', 
-      icon: UserCog, 
+      icon: Users, 
       roles: ['admin'] 
     },
   ];
@@ -66,7 +66,7 @@ const MobileNavigation = () => {
             <AvatarFallback>{getUserInitials()}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
-            <span className="text-sky-900 font-medium text-sm">Clinic Health</span>
+            <span className="text-sky-900 font-medium text-sm">Holcim</span>
             {currentUser && (
               <span className="text-xs text-sky-600">{currentUser.name}</span>
             )}
