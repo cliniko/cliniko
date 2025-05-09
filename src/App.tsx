@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -31,77 +32,79 @@ const queryClient = new QueryClient({
 });
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            
-            {/* Entry point for role-based routing */}
-            <Route path="/index" element={<Index />} />
-            
-            {/* Protected Routes with specific role restrictions */}
-            <Route 
-              element={
-                <RequireAuth>
-                  <AppLayout />
-                </RequireAuth>
-              }
-            >
-              <Route path="/dashboard" element={<Dashboard />} />
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<Login />} />
+              <Route path="/register" element={<Register />} />
               
-              <Route 
-                path="/consults" 
-                element={
-                  <RequireAuth allowedRoles={['admin', 'doctor', 'nurse']}>
-                    <Consults />
-                  </RequireAuth>
-                } 
-              />
+              {/* Entry point for role-based routing */}
+              <Route path="/index" element={<Index />} />
               
+              {/* Protected Routes with specific role restrictions */}
               <Route 
-                path="/patients" 
                 element={
-                  <RequireAuth allowedRoles={['admin', 'doctor', 'nurse', 'staff']}>
-                    <Patients />
+                  <RequireAuth>
+                    <AppLayout />
                   </RequireAuth>
                 }
-              />
+              >
+                <Route path="/dashboard" element={<Dashboard />} />
+                
+                <Route 
+                  path="/consults" 
+                  element={
+                    <RequireAuth allowedRoles={['admin', 'doctor', 'nurse']}>
+                      <Consults />
+                    </RequireAuth>
+                  } 
+                />
+                
+                <Route 
+                  path="/patients" 
+                  element={
+                    <RequireAuth allowedRoles={['admin', 'doctor', 'nurse', 'staff']}>
+                      <Patients />
+                    </RequireAuth>
+                  }
+                />
+                
+                <Route 
+                  path="/users" 
+                  element={
+                    <RequireAuth allowedRoles={['admin']}>
+                      <Users />
+                    </RequireAuth>
+                  } 
+                />
+                
+                <Route 
+                  path="/vitals" 
+                  element={
+                    <RequireAuth allowedRoles={['admin', 'doctor', 'nurse']}>
+                      <Vitals />
+                    </RequireAuth>
+                  } 
+                />
+              </Route>
               
-              <Route 
-                path="/users" 
-                element={
-                  <RequireAuth allowedRoles={['admin']}>
-                    <Users />
-                  </RequireAuth>
-                } 
-              />
+              {/* Redirect root to login page */}
+              <Route path="" element={<Navigate to="/" replace />} />
               
-              <Route 
-                path="/vitals" 
-                element={
-                  <RequireAuth allowedRoles={['admin', 'doctor', 'nurse']}>
-                    <Vitals />
-                  </RequireAuth>
-                } 
-              />
-            </Route>
-            
-            {/* Redirect root to login page */}
-            <Route path="" element={<Navigate to="/" replace />} />
-            
-            {/* 404 Route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-      <Toaster />
-      <Sonner />
-    </TooltipProvider>
-  </QueryClientProvider>
+              {/* 404 Route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+        <Toaster />
+        <Sonner />
+      </TooltipProvider>
+    </QueryClientProvider>
+  </React.StrictMode>
 );
 
 export default App;
