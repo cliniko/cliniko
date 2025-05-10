@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,11 +27,11 @@ const Vitals = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-medical-primary">Vital Signs Monitoring</h1>
+        <h1 className="text-2xl font-bold text-medical-nurse">Vital Signs Monitoring</h1>
         
         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-medical-primary hover:bg-medical-primary/90">
+            <Button className="bg-medical-nurse hover:bg-medical-nurse-dark">
               <Plus size={16} className="mr-1" />
               Add Vital Signs
             </Button>
@@ -135,7 +134,7 @@ const Vitals = () => {
             <div className="mt-4 flex justify-end">
               <Button 
                 onClick={handleNewVitalSign}
-                className="bg-medical-primary hover:bg-medical-primary/90"
+                className="bg-medical-nurse hover:bg-medical-nurse-dark"
               >
                 Save Vital Signs
               </Button>
@@ -151,9 +150,9 @@ const Vitals = () => {
           </CardHeader>
           <CardContent className="h-64 flex items-center justify-center">
             <div className="text-center">
-              <ActivitySquare size={48} className="mx-auto text-gray-300 mb-4" />
-              <p className="text-gray-500">No BP data available</p>
-              <p className="text-sm text-gray-400">Add vital signs to see charts</p>
+              <ActivitySquare size={48} className="mx-auto text-medical-gray/30 mb-4" />
+              <p className="text-medical-gray">No BP data available</p>
+              <p className="text-sm text-medical-gray/70">Add vital signs to see charts</p>
             </div>
           </CardContent>
         </Card>
@@ -164,9 +163,9 @@ const Vitals = () => {
           </CardHeader>
           <CardContent className="h-64 flex items-center justify-center">
             <div className="text-center">
-              <ActivitySquare size={48} className="mx-auto text-gray-300 mb-4" />
-              <p className="text-gray-500">No HbA1c data available</p>
-              <p className="text-sm text-gray-400">Add vital signs to see charts</p>
+              <ActivitySquare size={48} className="mx-auto text-medical-gray/30 mb-4" />
+              <p className="text-medical-gray">No HbA1c data available</p>
+              <p className="text-sm text-medical-gray/70">Add vital signs to see charts</p>
             </div>
           </CardContent>
         </Card>
@@ -177,14 +176,14 @@ const Vitals = () => {
           <CardTitle>Recent Vital Signs Records</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="bg-gray-50 rounded-md p-8 text-center">
-            <ActivitySquare size={48} className="mx-auto text-gray-300 mb-4" />
-            <p className="text-gray-500">No vital signs records found</p>
-            <p className="text-sm text-gray-400 mb-6">Add your first record using the button above</p>
+          <div className="bg-medical-nurse-light/50 rounded-md p-8 text-center">
+            <ActivitySquare size={48} className="mx-auto text-medical-gray/30 mb-4" />
+            <p className="text-medical-gray">No vital signs records found</p>
+            <p className="text-sm text-medical-gray/70 mb-6">Add your first record using the button above</p>
             <Button
               onClick={() => setIsAddModalOpen(true)}
               variant="outline"
-              className="mx-auto"
+              className="mx-auto hover:bg-medical-nurse hover:text-white"
             >
               <Plus size={16} className="mr-1" />
               Add First Record

@@ -411,8 +411,8 @@ const Users = () => {
             <RefreshCw size={14} className="mr-1" />
             Refresh
           </Button>
-        </div>
-
+              </div>
+              
         {/* Mobile tab navigation with sheet */}
         <div className="flex sm:hidden justify-between items-center mb-4">
           <Sheet>
@@ -469,7 +469,7 @@ const Users = () => {
                     <UserRound className="mr-2 h-4 w-4" />
                     Staff
                   </Button>
-                </div>
+              </div>
               </div>
             </SheetContent>
           </Sheet>
@@ -483,16 +483,16 @@ const Users = () => {
           >
             <RefreshCw size={14} />
           </Button>
-        </div>
+            </div>
         
         <TabsContent value="all" className="m-0">
-          <Card>
-            <CardHeader className="pb-2">
+        <Card>
+          <CardHeader className="pb-2">
               <CardTitle className="text-lg sm:text-xl">System Users</CardTitle>
               <CardDescription>
                 Total users: {users.length}
               </CardDescription>
-            </CardHeader>
+          </CardHeader>
             <CardContent className="p-0 sm:p-2 md:p-6 overflow-x-auto">
               {loading ? (
                 <div className="flex justify-center items-center h-40">
@@ -519,7 +519,7 @@ const Users = () => {
                       {filteredUsers.map(renderUserRow)}
                     </TableBody>
                   </Table>
-                </div>
+                          </div>
               )}
             </CardContent>
           </Card>
@@ -622,9 +622,9 @@ const Users = () => {
                 and manage non-medical tasks.
               </p>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          </CardContent>
+        </Card>
     </div>
   );
 };

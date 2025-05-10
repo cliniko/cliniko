@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -143,11 +142,11 @@ const Consults = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-medical-primary">Consults</h1>
+        <h1 className="text-2xl font-bold text-medical-doctor">Consults</h1>
         
         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-medical-primary hover:bg-medical-primary/90">
+            <Button className="bg-medical-doctor hover:bg-medical-doctor-dark">
               <Plus size={16} className="mr-1" />
               Add
             </Button>
