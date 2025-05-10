@@ -155,15 +155,15 @@ const Users = () => {
   const getRoleBadgeColor = (role: UserRole) => {
     switch (role) {
       case 'admin':
-        return 'bg-purple-100 text-purple-800 hover:bg-purple-200';
+        return 'bg-medical-admin-medium text-medical-admin-foreground hover:bg-medical-admin-dark/70';
       case 'doctor':
-        return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
+        return 'bg-medical-doctor-medium text-medical-doctor-foreground hover:bg-medical-doctor-dark/70';
       case 'nurse':
-        return 'bg-green-100 text-green-800 hover:bg-green-200';
+        return 'bg-medical-nurse-medium text-medical-nurse-foreground hover:bg-medical-nurse-dark/70';
       case 'staff':
-        return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
+        return 'bg-medical-staff-medium text-medical-staff-foreground hover:bg-medical-staff-dark/70';
       default:
-        return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
+        return 'bg-medical-staff-medium text-medical-staff-foreground hover:bg-medical-staff-dark/70';
     }
   };
 
@@ -198,7 +198,7 @@ const Users = () => {
           </Avatar>
           <div>
             <p className="font-medium text-sm md:text-base">{user.name}</p>
-            <p className="text-xs text-gray-500 hidden xs:block">{user.email}</p>
+            <p className="text-xs text-medical-gray hidden xs:block">{user.email}</p>
           </div>
         </div>
       </TableCell>
@@ -229,7 +229,7 @@ const Users = () => {
             <DropdownMenuSeparator />
             <DropdownMenuItem 
               disabled={user.id === currentUser?.id}
-              className="text-red-600 cursor-pointer"
+              className="text-medical-danger cursor-pointer"
             >
               <UserMinus className="mr-2 h-4 w-4" />
               <span>Deactivate</span>
@@ -245,7 +245,7 @@ const Users = () => {
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-medical-primary">User Management</h1>
-          <p className="text-gray-500 text-xs sm:text-sm">Manage system users and their permissions</p>
+          <p className="text-medical-gray text-xs sm:text-sm">Manage system users and their permissions</p>
         </div>
         
         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
@@ -578,45 +578,45 @@ const Users = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-            <div className="bg-blue-50 p-3 sm:p-4 rounded-md">
+            <div className="bg-medical-doctor-light p-3 sm:p-4 rounded-md">
               <div className="flex items-center mb-2">
                 {getRoleIcon('doctor')}
-                <h3 className="text-base sm:text-lg font-medium text-medical-primary">Doctor</h3>
+                <h3 className="text-base sm:text-lg font-medium text-medical-doctor-dark">Doctor</h3>
               </div>
-              <p className="text-xs sm:text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-medical-gray">
                 Full access to all patient records, consultations, and medical data. 
                 Can create and edit records, prescribe medications, and manage patient care.
               </p>
             </div>
             
-            <div className="bg-green-50 p-3 sm:p-4 rounded-md">
+            <div className="bg-medical-nurse-light p-3 sm:p-4 rounded-md">
               <div className="flex items-center mb-2">
                 {getRoleIcon('nurse')}
-                <h3 className="text-base sm:text-lg font-medium text-medical-success">Nurse</h3>
+                <h3 className="text-base sm:text-lg font-medium text-medical-nurse-dark">Nurse</h3>
               </div>
-              <p className="text-xs sm:text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-medical-gray">
                 Can view all patient records, create and update vital signs, add notes, 
                 and assist with patient management. Cannot prescribe medications.
               </p>
             </div>
             
-            <div className="bg-purple-50 p-3 sm:p-4 rounded-md">
+            <div className="bg-medical-admin-light p-3 sm:p-4 rounded-md">
               <div className="flex items-center mb-2">
                 {getRoleIcon('admin')}
-                <h3 className="text-base sm:text-lg font-medium text-purple-500">Administrator</h3>
+                <h3 className="text-base sm:text-lg font-medium text-medical-admin-dark">Administrator</h3>
               </div>
-              <p className="text-xs sm:text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-medical-gray">
                 Manages system settings, user accounts, and access permissions. 
                 Can view reports and statistics but has limited access to medical data.
               </p>
             </div>
             
-            <div className="bg-gray-50 p-3 sm:p-4 rounded-md">
+            <div className="bg-medical-staff-light p-3 sm:p-4 rounded-md">
               <div className="flex items-center mb-2">
                 {getRoleIcon('staff')}
-                <h3 className="text-base sm:text-lg font-medium text-medical-gray">Staff</h3>
+                <h3 className="text-base sm:text-lg font-medium text-medical-staff-dark">Staff</h3>
               </div>
-              <p className="text-xs sm:text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-medical-gray">
                 Limited access for reception and administrative staff. 
                 Can view basic patient information, schedule appointments, 
                 and manage non-medical tasks.

@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -71,7 +70,36 @@ export default {
 					success: '#10b981', // Green
 					warning: '#f59e0b', // Amber
 					danger: '#ef4444',  // Red
-					gray: '#64748b'     // Slate
+					gray: '#64748b',    // Slate
+					// Role-specific colors
+					admin: {
+						DEFAULT: '#8b5cf6', // Purple for admins
+						light: '#f5f3ff',   
+						medium: '#a78bfa',
+						dark: '#6d28d9',
+						foreground: '#4c1d95'
+					},
+					doctor: {
+						DEFAULT: '#2563eb', // Blue for doctors
+						light: '#eff6ff',   
+						medium: '#60a5fa',
+						dark: '#1d4ed8',
+						foreground: '#1e40af'
+					},
+					nurse: {
+						DEFAULT: '#10b981', // Green for nurses
+						light: '#ecfdf5',   
+						medium: '#34d399',
+						dark: '#059669',
+						foreground: '#047857'
+					},
+					staff: {
+						DEFAULT: '#64748b', // Slate for staff
+						light: '#f8fafc',   
+						medium: '#94a3b8',
+						dark: '#475569',
+						foreground: '#334155'
+					}
 				}
 			},
 			borderRadius: {
