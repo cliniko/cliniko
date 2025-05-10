@@ -1,11 +1,12 @@
-
-import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { SidebarProvider } from "./context/SidebarContext";
+import { MobileSidebarProvider } from "./context/MobileSidebarContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import RequireAuth from "./components/auth/RequireAuth";
 import AppLayout from "./components/layout/AppLayout";
 
@@ -16,6 +17,7 @@ import Consults from "./pages/Consults";
 import Patients from "./pages/Patients";
 import Users from "./pages/Users";
 import Vitals from "./pages/Vitals";
+import Documentation from "./pages/Documentation";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 
@@ -32,15 +34,17 @@ const queryClient = new QueryClient({
 });
 
 const App = () => (
-  <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <BrowserRouter>
-          <AuthProvider>
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <BrowserRouter>
+        <AuthProvider>
+          <ThemeProvider defaultTheme="light" storageKey="holcim-theme">
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/docs" element={<Documentation />} />
+              <Route path="/docs/components/:component" element={<Documentation />} />
               
               {/* Entry point for role-based routing */}
               <Route path="/index" element={<Index />} />
@@ -49,7 +53,11 @@ const App = () => (
               <Route 
                 element={
                   <RequireAuth>
-                    <AppLayout />
+                    <SidebarProvider>
+                      <MobileSidebarProvider>
+                        <AppLayout />
+                      </MobileSidebarProvider>
+                    </SidebarProvider>
                   </RequireAuth>
                 }
               >
@@ -98,13 +106,13 @@ const App = () => (
               {/* 404 Route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </AuthProvider>
-        </BrowserRouter>
-        <Toaster />
-        <Sonner />
-      </TooltipProvider>
-    </QueryClientProvider>
-  </React.StrictMode>
+          </ThemeProvider>
+        </AuthProvider>
+      </BrowserRouter>
+      <Toaster />
+      <Sonner />
+    </TooltipProvider>
+  </QueryClientProvider>
 );
 
 export default App;

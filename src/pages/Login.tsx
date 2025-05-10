@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/context/AuthContext';
-import { Loader2 } from 'lucide-react';
+import { Loader2, User } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -37,65 +36,75 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl text-medical-primary">Clinical Management System</CardTitle>
-          <CardDescription>Enter your credentials to sign in to your account</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="m.ramos@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link to="/forgot-password" className="text-xs text-medical-primary hover:underline">
-                  Forgot password?
-                </Link>
+    <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-background p-3 sm:p-4 md:p-6">
+      <div className="w-full max-w-[340px] sm:max-w-[380px] md:max-w-md space-y-4 sm:space-y-6">
+        <div className="flex items-center justify-center">
+          <div className="size-12 sm:size-14 md:size-16 bg-primary/90 rounded-md flex items-center justify-center text-white mb-2 sm:mb-4">
+            <User className="size-6 sm:size-7 md:size-8" />
+          </div>
+        </div>
+        
+        <Card className="border shadow-lg">
+          <CardHeader className="space-y-1 px-4 sm:px-6 py-4 sm:py-5">
+            <CardTitle className="text-lg sm:text-xl md:text-2xl font-bold text-center">Sign in to your account</CardTitle>
+            <CardDescription className="text-center text-xs sm:text-sm">Enter your credentials to continue</CardDescription>
+          </CardHeader>
+          <form onSubmit={handleSubmit}>
+            <CardContent className="space-y-3 sm:space-y-4 px-4 sm:px-6">
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="email" className="text-xs sm:text-sm">Email</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="name@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="h-9 sm:h-10 text-xs sm:text-sm"
+                />
               </div>
-              <Input 
-                id="password" 
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col">
-            <Button 
-              type="submit" 
-              className="w-full bg-medical-primary hover:bg-medical-primary/90" 
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing In...
-                </>
-              ) : (
-                "Sign In"
-              )}
-            </Button>
-            <p className="mt-4 text-center text-sm text-gray-600">
-              Don't have an account?{' '}
-              <Link to="/register" className="text-medical-primary hover:underline">
-                Sign up
-              </Link>
-            </p>
-          </CardFooter>
-        </form>
-      </Card>
+              <div className="space-y-1.5 sm:space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-xs sm:text-sm">Password</Label>
+                  <Link to="/forgot-password" className="text-[10px] sm:text-xs text-primary hover:underline">
+                    Forgot password?
+                  </Link>
+                </div>
+                <Input 
+                  id="password" 
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="h-9 sm:h-10 text-xs sm:text-sm"
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="flex flex-col space-y-3 sm:space-y-4 px-4 sm:px-6 pb-5 sm:pb-6">
+              <Button 
+                type="submit" 
+                className="w-full h-9 sm:h-10 text-xs sm:text-sm" 
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-1.5 sm:mr-2 size-3.5 sm:size-4 animate-spin" />
+                    Signing In...
+                  </>
+                ) : (
+                  "Sign In"
+                )}
+              </Button>
+              <p className="text-center text-[10px] sm:text-xs md:text-sm text-muted-foreground">
+                Don't have an account?{' '}
+                <Link to="/register" className="text-primary font-medium hover:underline">
+                  Sign up
+                </Link>
+              </p>
+            </CardFooter>
+          </form>
+        </Card>
+      </div>
     </div>
   );
 };

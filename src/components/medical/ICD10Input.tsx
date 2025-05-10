@@ -1,19 +1,25 @@
-
 import React, { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 
+export interface ICD10Code {
+  code: string;
+  description: string;
+}
+
 interface ICD10InputProps {
-  value: string;
-  onChange: (value: string) => void;
+  value?: string;
+  onChange?: (value: string) => void;
+  onSelect?: (code: ICD10Code) => void;
   placeholder?: string;
   className?: string;
   minHeight?: string;
 }
 
 const ICD10Input: React.FC<ICD10InputProps> = ({ 
-  value, 
+  value = '', 
   onChange, 
+  onSelect,
   placeholder = 'Search ICD-10 codes...', 
   className,
   minHeight = '80px'
@@ -89,19 +95,32 @@ const ICD10Input: React.FC<ICD10InputProps> = ({
             select: function(item: any) {
               if (!item || !Array.isArray(item) || item.length < 2) return;
               
-              const selectedCode = `${item[0]} - ${item[1]}`;
-              let newValue = value;
+              const code = item[0];
+              const description = item[1];
               
-              // If there's existing text, add the code on a new line
-              if (value && !value.endsWith('\n')) {
-                newValue = `${value}\n${selectedCode}`;
-              } else if (value) {
-                newValue = `${value}${selectedCode}`;
-              } else {
-                newValue = selectedCode;
+              // If onSelect is provided, use that
+              if (onSelect) {
+                onSelect({ code, description });
+                return false;
               }
               
-              onChange(newValue);
+              // Otherwise use onChange if provided
+              if (onChange) {
+                const selectedCode = `${code} - ${description}`;
+                let newValue = value;
+                
+                // If there's existing text, add the code on a new line
+                if (value && !value.endsWith('\n')) {
+                  newValue = `${value}\n${selectedCode}`;
+                } else if (value) {
+                  newValue = `${value}${selectedCode}`;
+                } else {
+                  newValue = selectedCode;
+                }
+                
+                onChange(newValue);
+              }
+              
               return false; // Prevent default behavior
             }
           }
@@ -119,6 +138,12 @@ const ICD10Input: React.FC<ICD10InputProps> = ({
     }
   };
 
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (onChange) {
+      onChange(e.target.value);
+    }
+  };
+
   return (
     <div className="relative w-full">
       <Textarea
@@ -130,7 +155,7 @@ const ICD10Input: React.FC<ICD10InputProps> = ({
           `min-h-[${minHeight}] w-full`,
           className
         )}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={handleChange}
       />
     </div>
   );

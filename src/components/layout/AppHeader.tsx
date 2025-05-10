@@ -1,8 +1,7 @@
-
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, BookOpen } from 'lucide-react';
 import MobileNavigation from './MobileNavigation';
 
 const AppHeader = () => {
@@ -21,7 +20,15 @@ const AppHeader = () => {
           </Link>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          <Link 
+            to="/docs" 
+            className="flex items-center gap-1 text-sm hover:text-medical-primary transition-colors"
+          >
+            <BookOpen className="h-4 w-4" />
+            <span className="font-medium hidden md:inline">Documentation</span>
+          </Link>
+          
           <div className="hidden md:flex items-center gap-1 text-sm">
             <User className="h-4 w-4" />
             <span className="font-medium">{currentUser?.name}</span>
