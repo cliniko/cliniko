@@ -7,13 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { UserCog, UserRound, Plus, Loader2, MoreHorizontal, Edit, UserMinus, RefreshCw, Shield, UserCheck } from 'lucide-react';
+import { UserCog, UserRound, Plus, Loader2, MoreHorizontal, Edit, UserMinus, RefreshCw, Shield, UserCheck, Menu } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { UserRole, User } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 interface UserWithProfile extends User {
   id: string;
@@ -184,23 +185,77 @@ const Users = () => {
   const filteredUsers = activeTab === 'all' 
     ? users 
     : users.filter(user => user.role === activeTab);
+
+  // Mobile-friendly table renderer
+  const renderUserRow = (user: UserWithProfile) => (
+    <TableRow key={user.id}>
+      <TableCell className="p-2 md:p-4">
+        <div className="flex items-center space-x-2 md:space-x-3">
+          <Avatar className="hidden sm:inline-flex h-8 w-8 md:h-10 md:w-10">
+            <AvatarFallback className="bg-medical-primary/10 text-medical-primary text-xs md:text-sm">
+              {getInitials(user.name)}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <p className="font-medium text-sm md:text-base">{user.name}</p>
+            <p className="text-xs text-gray-500 hidden xs:block">{user.email}</p>
+          </div>
+        </div>
+      </TableCell>
+      <TableCell className="p-2 md:p-4">
+        <Badge className={`${getRoleBadgeColor(user.role)} text-xs whitespace-nowrap`}>
+          <div className="flex items-center">
+            <span className="hidden sm:inline-block">{getRoleIcon(user.role)}</span>
+            <span className="capitalize">{user.role}</span>
+          </div>
+        </Badge>
+      </TableCell>
+      <TableCell className="p-2 md:p-4 text-right">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem 
+              onClick={() => openEditRoleModal(user)}
+              disabled={user.id === currentUser?.id}
+              className="cursor-pointer"
+            >
+              <Edit className="mr-2 h-4 w-4" />
+              <span>Edit Role</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem 
+              disabled={user.id === currentUser?.id}
+              className="text-red-600 cursor-pointer"
+            >
+              <UserMinus className="mr-2 h-4 w-4" />
+              <span>Deactivate</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </TableCell>
+    </TableRow>
+  );
   
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6 px-2 sm:px-4 md:px-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-medical-primary">User Management</h1>
-          <p className="text-gray-500 text-sm">Manage system users and their permissions</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-medical-primary">User Management</h1>
+          <p className="text-gray-500 text-xs sm:text-sm">Manage system users and their permissions</p>
         </div>
         
         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-medical-primary hover:bg-medical-primary/90">
+            <Button className="bg-medical-primary hover:bg-medical-primary/90 w-full sm:w-auto">
               <Plus size={16} className="mr-1" />
               Add New User
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Add New User</DialogTitle>
               <DialogDescription>
@@ -276,7 +331,7 @@ const Users = () => {
 
         {/* Edit Role Modal */}
         <Dialog open={isEditRoleModalOpen} onOpenChange={setIsEditRoleModalOpen}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Edit User Role</DialogTitle>
               <DialogDescription>
@@ -336,9 +391,10 @@ const Users = () => {
         </Dialog>
       </div>
       
-      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-        <div className="flex justify-between items-center mb-4">
-          <TabsList className="grid grid-cols-5 w-[600px]">
+      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
+        {/* Desktop tab navigation */}
+        <div className="hidden sm:flex justify-between items-center mb-4">
+          <TabsList className="grid grid-cols-5 w-full max-w-3xl">
             <TabsTrigger value="all">All Users</TabsTrigger>
             <TabsTrigger value="admin">Administrators</TabsTrigger>
             <TabsTrigger value="doctor">Doctors</TabsTrigger>
@@ -350,22 +406,94 @@ const Users = () => {
             variant="outline" 
             size="sm" 
             onClick={fetchUsers}
-            className="flex items-center"
+            className="flex items-center ml-2"
           >
             <RefreshCw size={14} className="mr-1" />
             Refresh
+          </Button>
+        </div>
+
+        {/* Mobile tab navigation with sheet */}
+        <div className="flex sm:hidden justify-between items-center mb-4">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="sm" className="flex items-center">
+                <Menu className="h-4 w-4 mr-2" />
+                {activeTab === 'all' ? 'All Users' : 
+                  activeTab === 'admin' ? 'Administrators' : 
+                  activeTab === 'doctor' ? 'Doctors' : 
+                  activeTab === 'nurse' ? 'Nurses' : 'Staff'}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[240px] sm:w-[300px]">
+              <div className="py-6">
+                <h3 className="text-lg font-medium mb-5">Filter Users</h3>
+                <div className="grid gap-4">
+                  <Button 
+                    variant={activeTab === 'all' ? 'default' : 'outline'} 
+                    onClick={() => setActiveTab('all')}
+                    className="justify-start"
+                  >
+                    <UserRound className="mr-2 h-4 w-4" />
+                    All Users
+                  </Button>
+                  <Button 
+                    variant={activeTab === 'admin' ? 'default' : 'outline'} 
+                    onClick={() => setActiveTab('admin')}
+                    className="justify-start"
+                  >
+                    <Shield className="mr-2 h-4 w-4" />
+                    Administrators
+                  </Button>
+                  <Button 
+                    variant={activeTab === 'doctor' ? 'default' : 'outline'} 
+                    onClick={() => setActiveTab('doctor')}
+                    className="justify-start"
+                  >
+                    <UserCog className="mr-2 h-4 w-4" />
+                    Doctors
+                  </Button>
+                  <Button 
+                    variant={activeTab === 'nurse' ? 'default' : 'outline'} 
+                    onClick={() => setActiveTab('nurse')}
+                    className="justify-start"
+                  >
+                    <UserCheck className="mr-2 h-4 w-4" />
+                    Nurses
+                  </Button>
+                  <Button 
+                    variant={activeTab === 'staff' ? 'default' : 'outline'} 
+                    onClick={() => setActiveTab('staff')}
+                    className="justify-start"
+                  >
+                    <UserRound className="mr-2 h-4 w-4" />
+                    Staff
+                  </Button>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={fetchUsers}
+            className="flex items-center"
+            aria-label="Refresh users"
+          >
+            <RefreshCw size={14} />
           </Button>
         </div>
         
         <TabsContent value="all" className="m-0">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-xl">System Users</CardTitle>
+              <CardTitle className="text-lg sm:text-xl">System Users</CardTitle>
               <CardDescription>
                 Total users: {users.length}
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0 sm:p-2 md:p-6 overflow-x-auto">
               {loading ? (
                 <div className="flex justify-center items-center h-40">
                   <Loader2 className="animate-spin h-8 w-8 text-medical-primary" />
@@ -378,69 +506,20 @@ const Users = () => {
                   </div>
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>User</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead className="w-[100px]">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredUsers.map((user) => (
-                      <TableRow key={user.id}>
-                        <TableCell>
-                          <div className="flex items-center space-x-3">
-                            <Avatar>
-                              <AvatarFallback className="bg-medical-primary/10 text-medical-primary">
-                                {getInitials(user.name)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="font-medium">{user.name}</p>
-                              <p className="text-xs text-gray-500">{user.email}</p>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={getRoleBadgeColor(user.role)}>
-                            <div className="flex items-center">
-                              {getRoleIcon(user.role)}
-                              <span className="capitalize">{user.role}</span>
-                            </div>
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem 
-                                onClick={() => openEditRoleModal(user)}
-                                disabled={user.id === currentUser?.id}
-                                className="cursor-pointer"
-                              >
-                                <Edit className="mr-2 h-4 w-4" />
-                                <span>Edit Role</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                disabled={user.id === currentUser?.id}
-                                className="text-red-600 cursor-pointer"
-                              >
-                                <UserMinus className="mr-2 h-4 w-4" />
-                                <span>Deactivate</span>
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
+                <div className="overflow-x-auto -mx-4 sm:mx-0">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[50%] md:w-auto">User</TableHead>
+                        <TableHead className="w-[30%] md:w-auto">Role</TableHead>
+                        <TableHead className="w-[20%] md:w-[100px] text-right">Actions</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredUsers.map(renderUserRow)}
+                    </TableBody>
+                  </Table>
+                </div>
               )}
             </CardContent>
           </Card>
@@ -451,12 +530,12 @@ const Users = () => {
           <TabsContent key={roleTab} value={roleTab} className="m-0">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-xl capitalize">{roleTab}s</CardTitle>
+                <CardTitle className="text-lg sm:text-xl capitalize">{roleTab}s</CardTitle>
                 <CardDescription>
                   Total {roleTab}s: {users.filter(u => u.role === roleTab).length}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-0 sm:p-2 md:p-6 overflow-x-auto">
                 {loading ? (
                   <div className="flex justify-center items-center h-40">
                     <Loader2 className="animate-spin h-8 w-8 text-medical-primary" />
@@ -469,69 +548,20 @@ const Users = () => {
                     </div>
                   </div>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>User</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead className="w-[100px]">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredUsers.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell>
-                            <div className="flex items-center space-x-3">
-                              <Avatar>
-                                <AvatarFallback className="bg-medical-primary/10 text-medical-primary">
-                                  {getInitials(user.name)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="font-medium">{user.name}</p>
-                                <p className="text-xs text-gray-500">{user.email}</p>
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge className={getRoleBadgeColor(user.role)}>
-                              <div className="flex items-center">
-                                {getRoleIcon(user.role)}
-                                <span className="capitalize">{user.role}</span>
-                              </div>
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem 
-                                  onClick={() => openEditRoleModal(user)}
-                                  disabled={user.id === currentUser?.id}
-                                  className="cursor-pointer"
-                                >
-                                  <Edit className="mr-2 h-4 w-4" />
-                                  <span>Edit Role</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem 
-                                  disabled={user.id === currentUser?.id}
-                                  className="text-red-600 cursor-pointer"
-                                >
-                                  <UserMinus className="mr-2 h-4 w-4" />
-                                  <span>Deactivate</span>
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
+                  <div className="overflow-x-auto -mx-4 sm:mx-0">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[50%] md:w-auto">User</TableHead>
+                          <TableHead className="w-[30%] md:w-auto">Role</TableHead>
+                          <TableHead className="w-[20%] md:w-[100px] text-right">Actions</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredUsers.map(renderUserRow)}
+                      </TableBody>
+                    </Table>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -541,52 +571,52 @@ const Users = () => {
       
       <Card className="border-l-4 border-l-medical-primary">
         <CardHeader className="pb-2">
-          <CardTitle>User Access Roles</CardTitle>
+          <CardTitle className="text-lg sm:text-xl">User Access Roles</CardTitle>
           <CardDescription>
             Overview of system roles and their permissions
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-            <div className="bg-blue-50 p-4 rounded-md">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+            <div className="bg-blue-50 p-3 sm:p-4 rounded-md">
               <div className="flex items-center mb-2">
                 {getRoleIcon('doctor')}
-                <h3 className="text-lg font-medium text-medical-primary">Doctor</h3>
+                <h3 className="text-base sm:text-lg font-medium text-medical-primary">Doctor</h3>
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-gray-600">
                 Full access to all patient records, consultations, and medical data. 
                 Can create and edit records, prescribe medications, and manage patient care.
               </p>
             </div>
             
-            <div className="bg-green-50 p-4 rounded-md">
+            <div className="bg-green-50 p-3 sm:p-4 rounded-md">
               <div className="flex items-center mb-2">
                 {getRoleIcon('nurse')}
-                <h3 className="text-lg font-medium text-medical-success">Nurse</h3>
+                <h3 className="text-base sm:text-lg font-medium text-medical-success">Nurse</h3>
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-gray-600">
                 Can view all patient records, create and update vital signs, add notes, 
                 and assist with patient management. Cannot prescribe medications.
               </p>
             </div>
             
-            <div className="bg-purple-50 p-4 rounded-md">
+            <div className="bg-purple-50 p-3 sm:p-4 rounded-md">
               <div className="flex items-center mb-2">
                 {getRoleIcon('admin')}
-                <h3 className="text-lg font-medium text-purple-500">Administrator</h3>
+                <h3 className="text-base sm:text-lg font-medium text-purple-500">Administrator</h3>
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-gray-600">
                 Manages system settings, user accounts, and access permissions. 
                 Can view reports and statistics but has limited access to medical data.
               </p>
             </div>
             
-            <div className="bg-gray-50 p-4 rounded-md">
+            <div className="bg-gray-50 p-3 sm:p-4 rounded-md">
               <div className="flex items-center mb-2">
                 {getRoleIcon('staff')}
-                <h3 className="text-lg font-medium text-medical-gray">Staff</h3>
+                <h3 className="text-base sm:text-lg font-medium text-medical-gray">Staff</h3>
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-gray-600">
                 Limited access for reception and administrative staff. 
                 Can view basic patient information, schedule appointments, 
                 and manage non-medical tasks.
