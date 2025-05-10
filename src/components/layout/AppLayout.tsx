@@ -13,12 +13,12 @@ const AppLayout = () => {
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
-    };
+  };
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-  
+
   return (
     <div className="min-h-screen bg-background">
       {/* Sidebar - rendered outside main content flow */}
@@ -26,7 +26,7 @@ const AppLayout = () => {
       
       {/* Mobile-only header */}
       <MobileHeader />
-      
+
       {/* Main content */}
       <main 
         className={cn(

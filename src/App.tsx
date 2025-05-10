@@ -39,73 +39,73 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <ThemeProvider defaultTheme="light" storageKey="holcim-theme">
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Login />} />
+            <Route path="/register" element={<Register />} />
               <Route path="/docs" element={<Documentation />} />
               <Route path="/docs/components/:component" element={<Documentation />} />
-              
-              {/* Entry point for role-based routing */}
-              <Route path="/index" element={<Index />} />
-              
-              {/* Protected Routes with specific role restrictions */}
-              <Route 
-                element={
-                  <RequireAuth>
+            
+            {/* Entry point for role-based routing */}
+            <Route path="/index" element={<Index />} />
+            
+            {/* Protected Routes with specific role restrictions */}
+            <Route 
+              element={
+                <RequireAuth>
                     <SidebarProvider>
                       <MobileSidebarProvider>
-                        <AppLayout />
+                  <AppLayout />
                       </MobileSidebarProvider>
                     </SidebarProvider>
+                </RequireAuth>
+              }
+            >
+              <Route path="/dashboard" element={<Dashboard />} />
+              
+              <Route 
+                path="/consults" 
+                element={
+                  <RequireAuth allowedRoles={['admin', 'doctor', 'nurse']}>
+                    <Consults />
+                  </RequireAuth>
+                } 
+              />
+              
+              <Route 
+                path="/patients" 
+                element={
+                  <RequireAuth allowedRoles={['admin', 'doctor', 'nurse', 'staff']}>
+                    <Patients />
                   </RequireAuth>
                 }
-              >
-                <Route path="/dashboard" element={<Dashboard />} />
-                
-                <Route 
-                  path="/consults" 
-                  element={
-                    <RequireAuth allowedRoles={['admin', 'doctor', 'nurse']}>
-                      <Consults />
-                    </RequireAuth>
-                  } 
-                />
-                
-                <Route 
-                  path="/patients" 
-                  element={
-                    <RequireAuth allowedRoles={['admin', 'doctor', 'nurse', 'staff']}>
-                      <Patients />
-                    </RequireAuth>
-                  }
-                />
-                
-                <Route 
-                  path="/users" 
-                  element={
-                    <RequireAuth allowedRoles={['admin']}>
-                      <Users />
-                    </RequireAuth>
-                  } 
-                />
-                
-                <Route 
-                  path="/vitals" 
-                  element={
-                    <RequireAuth allowedRoles={['admin', 'doctor', 'nurse']}>
-                      <Vitals />
-                    </RequireAuth>
-                  } 
-                />
-              </Route>
+              />
               
-              {/* Redirect root to login page */}
-              <Route path="" element={<Navigate to="/" replace />} />
+              <Route 
+                path="/users" 
+                element={
+                  <RequireAuth allowedRoles={['admin']}>
+                    <Users />
+                  </RequireAuth>
+                } 
+              />
               
-              {/* 404 Route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+              <Route 
+                path="/vitals" 
+                element={
+                  <RequireAuth allowedRoles={['admin', 'doctor', 'nurse']}>
+                    <Vitals />
+                  </RequireAuth>
+                } 
+              />
+            </Route>
+            
+            {/* Redirect root to login page */}
+            <Route path="" element={<Navigate to="/" replace />} />
+            
+            {/* 404 Route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
           </ThemeProvider>
         </AuthProvider>
       </BrowserRouter>

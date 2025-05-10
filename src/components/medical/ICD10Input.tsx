@@ -107,18 +107,18 @@ const ICD10Input: React.FC<ICD10InputProps> = ({
               // Otherwise use onChange if provided
               if (onChange) {
                 const selectedCode = `${code} - ${description}`;
-                let newValue = value;
-                
-                // If there's existing text, add the code on a new line
-                if (value && !value.endsWith('\n')) {
-                  newValue = `${value}\n${selectedCode}`;
-                } else if (value) {
-                  newValue = `${value}${selectedCode}`;
-                } else {
-                  newValue = selectedCode;
-                }
-                
-                onChange(newValue);
+              let newValue = value;
+              
+              // If there's existing text, add the code on a new line
+              if (value && !value.endsWith('\n')) {
+                newValue = `${value}\n${selectedCode}`;
+              } else if (value) {
+                newValue = `${value}${selectedCode}`;
+              } else {
+                newValue = selectedCode;
+              }
+              
+              onChange(newValue);
               }
               
               return false; // Prevent default behavior

@@ -377,23 +377,23 @@ const Patients = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? (
+              {isLoading ? (
               <TableRow>
                 <TableCell colSpan={6} className="h-16 sm:h-24 text-center text-xs sm:text-sm">
-                  <div className="flex items-center justify-center">
+                    <div className="flex items-center justify-center">
                     <Loader2 className="size-4 sm:size-5 animate-spin mr-1.5 sm:mr-2" />
-                    Loading patients...
-                  </div>
+                      Loading patients...
+                    </div>
                 </TableCell>
               </TableRow>
-            ) : patientsData?.patients && patientsData.patients.length === 0 ? (
+              ) : patientsData?.patients && patientsData.patients.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="h-16 sm:h-24 text-center text-xs sm:text-sm">
-                  No patients found
+                    No patients found
                 </TableCell>
               </TableRow>
-            ) : (
-              patientsData?.patients.map((patient) => (
+              ) : (
+                patientsData?.patients.map((patient) => (
                 <TableRow key={patient.id}>
                   <TableCell className="font-medium py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm">{patient.name}</TableCell>
                   <TableCell className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm">{patient.dateOfBirth ? `${calculateAge(patient.dateOfBirth)} yrs` : '—'}</TableCell>
@@ -403,10 +403,10 @@ const Patients = () => {
                     </Badge>
                   </TableCell>
                   <TableCell className="hidden sm:table-cell py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm">
-                    {patient.contact || '—'}
+                      {patient.contact || '—'}
                   </TableCell>
                   <TableCell className="hidden md:table-cell py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm truncate max-w-[150px]">
-                    {patient.email || '—'}
+                      {patient.email || '—'}
                   </TableCell>
                   <TableCell className="text-right py-2 sm:py-3 px-2 sm:px-4">
                     <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8">
@@ -415,13 +415,13 @@ const Patients = () => {
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
+                ))
+              )}
           </TableBody>
         </Table>
-      </div>
-      
-      {/* Pagination */}
+        </div>
+        
+        {/* Pagination */}
       {patientsData?.totalPages && patientsData.totalPages > 1 && (
         <Pagination className="mx-auto mt-6">
           <PaginationContent className="flex-wrap">
@@ -483,19 +483,19 @@ const Patients = () => {
               
               if (pageNumber === 0) return null;
               
-              return (
+                    return (
                 <PaginationItem key={pageNumber}>
                   <PaginationLink
                     className={`text-xs sm:text-sm h-8 sm:h-9 ${pageNumber === page ? 'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground' : ''}`}
-                    onClick={() => setPage(pageNumber)}
+                        onClick={() => setPage(pageNumber)}
                     isActive={pageNumber === page}
-                  >
-                    {pageNumber}
+                      >
+                        {pageNumber}
                   </PaginationLink>
                 </PaginationItem>
-              );
-            })}
-            
+                    );
+                  })}
+                  
             <PaginationItem>
               <PaginationNext 
                 className={`text-xs sm:text-sm h-8 sm:h-9 ${page === patientsData.totalPages ? 'pointer-events-none opacity-50' : ''}`}
@@ -504,7 +504,7 @@ const Patients = () => {
             </PaginationItem>
           </PaginationContent>
         </Pagination>
-      )}
+        )}
     </div>
   );
 };

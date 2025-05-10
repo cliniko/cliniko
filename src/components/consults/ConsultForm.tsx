@@ -223,7 +223,7 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
     setSelectedDrug(drug);
     setShowPrescriptionForm(true);
   };
-  
+
   const handleVitalsChange = (vitalsData: VitalSigns) => {
     form.setValue('vital_signs', vitalsData);
   };
@@ -267,7 +267,7 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
       });
     }
   };
-
+  
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -279,11 +279,11 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
             render={({ field }) => (
               <FormItem className="flex flex-col">
                 <FormLabel>Date</FormLabel>
-                <Popover>
-                  <PopoverTrigger asChild>
+          <Popover>
+            <PopoverTrigger asChild>
                     <FormControl>
-                      <Button
-                        variant="outline"
+              <Button
+                variant="outline"
                         className={cn(
                           "w-full pl-3 text-left font-normal",
                           !field.value && "text-muted-foreground"
@@ -295,26 +295,26 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
                           <span>Pick a date</span>
                         )}
                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
+              </Button>
                     </FormControl>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
                       selected={field.value}
                       onSelect={field.onChange}
                       disabled={(date) =>
                         date > new Date() || date < new Date("1900-01-01")
                       }
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
+        
           <FormField
             control={form.control}
             name="time"
@@ -346,9 +346,9 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select patient" />
-                    </SelectTrigger>
+            </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+            <SelectContent>
                     {isLoadingPatients ? (
                       <div className="flex items-center justify-center p-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -361,8 +361,8 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
                         </SelectItem>
                       ))
                     )}
-                  </SelectContent>
-                </Select>
+            </SelectContent>
+          </Select>
                 <FormMessage />
               </FormItem>
             )}
@@ -381,21 +381,21 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select patient type" />
-                    </SelectTrigger>
+          </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+          <SelectContent>
                     <SelectItem value="new">New Patient</SelectItem>
                     <SelectItem value="follow_up">Follow-up</SelectItem>
                     <SelectItem value="emergency">Emergency</SelectItem>
                     <SelectItem value="chronic">Chronic Care</SelectItem>
-                  </SelectContent>
-                </Select>
+          </SelectContent>
+        </Select>
                 <FormMessage />
               </FormItem>
             )}
-          />
-        </div>
-        
+        />
+      </div>
+      
         {/* Chief Complaint & Subjective */}
         <FormField
           control={form.control}
@@ -418,7 +418,7 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
             <FormItem>
               <FormLabel>Subjective</FormLabel>
               <FormControl>
-                <Textarea 
+        <Textarea 
                   placeholder="Patient's description of symptoms and history" 
                   className="min-h-32"
                   {...field} 
@@ -433,21 +433,21 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
         <div className="p-4 border rounded-md">
           <h3 className="text-lg font-semibold mb-4">Vital Signs</h3>
           <VitalsForm onChange={handleVitalsChange} />
-        </div>
-        
+      </div>
+      
         {/* Objective Findings */}
         <div className="p-4 border rounded-md">
           <h3 className="text-lg font-semibold mb-4">Objective Findings</h3>
-          <ObjectiveSection 
-            objectives={objectives} 
-            setObjectives={setObjectives} 
-          />
+      <ObjectiveSection 
+        objectives={objectives}
+        setObjectives={setObjectives}
+      />
         </div>
-        
+      
         {/* Assessment */}
         <div className="p-4 border rounded-md">
           <h3 className="text-lg font-semibold mb-4">Assessment</h3>
-          <div className="space-y-2">
+      <div className="space-y-2">
             <Textarea 
               value={assessment}
               onChange={(e) => setAssessment(e.target.value)}
@@ -461,7 +461,7 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
           
           <div className="mt-4">
             <h4 className="text-md font-medium mb-2">ICD-10 Code Lookup</h4>
-            <ICD10Input
+        <ICD10Input 
               onSelect={(code: ICD10Code) => {
                 setAssessment(prev => 
                   `${prev ? prev + '\n' : ''}${code.code} - ${code.description}`
@@ -469,26 +469,26 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
               }}
             />
           </div>
-        </div>
-        
+      </div>
+      
         {/* Plan */}
         <div className="p-4 border rounded-md">
           <h3 className="text-lg font-semibold mb-4">Plan</h3>
-          <PlanSection 
-            plans={plans} 
-            setPlans={setPlans} 
-          />
+      <PlanSection
+        plans={plans}
+        setPlans={setPlans}
+      />
         </div>
-        
+      
         {/* Prescription */}
         <div className="p-4 border rounded-md">
           <h3 className="text-lg font-semibold mb-4">Prescriptions</h3>
-          <PrescriptionSection 
-            prescriptions={prescriptions}
+      <PrescriptionSection
+        prescriptions={prescriptions}
             onDrugSelect={handleDrugSelect}
-            onSave={handleSavePrescription}
-            onCancel={handleCancelPrescription}
-            onRemove={handleRemovePrescription}
+        onSave={handleSavePrescription}
+        onCancel={handleCancelPrescription}
+        onRemove={handleRemovePrescription}
             selectedDrug={selectedDrug}
             showPrescriptionForm={showPrescriptionForm}
           />
@@ -502,17 +502,17 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Attending Physician</FormLabel>
-                <Select
+          <Select 
                   onValueChange={field.onChange}
                   defaultValue={field.value}
                   disabled={isLoadingStaff}
-                >
+          >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select physician" />
-                    </SelectTrigger>
+            </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+            <SelectContent>
                     {isLoadingStaff ? (
                       <div className="flex items-center justify-center p-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -527,13 +527,13 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
                           </SelectItem>
                         ))
                     )}
-                  </SelectContent>
-                </Select>
+            </SelectContent>
+          </Select>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
+      
           <FormField
             control={form.control}
             name="attending_nurse"
@@ -555,7 +555,7 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
                       <div className="flex items-center justify-center p-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         <span className="ml-2">Loading...</span>
-                      </div>
+          </div>
                     ) : (
                       medicalStaff
                         .filter(staff => ['nurse', 'admin'].includes(staff.role))
@@ -612,19 +612,19 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
                   <FormDescription>
                     Recommend regular HbA1c monitoring
                   </FormDescription>
-                </div>
+          </div>
               </FormItem>
             )}
           />
-        </div>
-        
+      </div>
+      
         {/* Form Actions */}
         <div className="flex justify-end space-x-2 pt-4">
           <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
-          </Button>
+          Cancel
+        </Button>
           <Button type="submit">Save Consultation</Button>
-        </div>
+      </div>
       </form>
     </Form>
   );

@@ -24,7 +24,7 @@ const Dashboard = () => {
         <h1 className="text-2xl sm:text-2xl md:text-3xl font-bold text-primary truncate">Welcome back, {currentUser?.name}</h1>
         <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">
           Access your management tools and information below
-        </p>
+      </p>
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
