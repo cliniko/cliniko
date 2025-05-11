@@ -20,6 +20,8 @@ const ResetPassword = () => {
   useEffect(() => {
     // Check if we have access token in the URL (from email link)
     const hash = window.location.hash;
+    console.log('Reset password URL hash:', hash);
+    
     if (!hash || !hash.includes('access_token')) {
       toast({
         title: "Invalid or expired link",
