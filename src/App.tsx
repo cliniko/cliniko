@@ -21,6 +21,7 @@ import AINotes from "./pages/AINotes";
 import Documentation from "./pages/Documentation";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
+import ResetPassword from '@/pages/ResetPassword';
 
 // Create a custom queryClient with optimized settings
 const queryClient = new QueryClient({
@@ -44,8 +45,9 @@ const App = () => (
             {/* Public Routes */}
             <Route path="/" element={<Login />} />
             <Route path="/register" element={<Register />} />
-              <Route path="/docs" element={<Documentation />} />
-              <Route path="/docs/components/:component" element={<Documentation />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/docs" element={<Documentation />} />
+            <Route path="/docs/components/:component" element={<Documentation />} />
             
             {/* Entry point for role-based routing */}
             <Route path="/index" element={<Index />} />
