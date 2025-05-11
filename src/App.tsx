@@ -17,6 +17,7 @@ import Consults from "./pages/Consults";
 import Patients from "./pages/Patients";
 import Users from "./pages/Users";
 import Vitals from "./pages/Vitals";
+import AINotes from "./pages/AINotes";
 import Documentation from "./pages/Documentation";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
@@ -95,6 +96,15 @@ const App = () => (
                 element={
                   <RequireAuth allowedRoles={['admin', 'doctor', 'nurse']}>
                     <Vitals />
+                  </RequireAuth>
+                } 
+              />
+              
+              <Route 
+                path="/ai-notes" 
+                element={
+                  <RequireAuth allowedRoles={['admin', 'doctor', 'nurse']}>
+                    <AINotes />
                   </RequireAuth>
                 } 
               />

@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Menu, X, Home, Users, ClipboardList, UserCog, Activity } from 'lucide-react';
+import { Menu, X, Home, Users, ClipboardList, UserCog, Activity, Brain } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Drawer,
@@ -27,6 +26,7 @@ const navItems: NavItem[] = [
   { label: 'Patients', href: '/patients', icon: Users },
   { label: 'Consults', href: '/consults', icon: ClipboardList, roles: ['admin', 'doctor', 'nurse'] },
   { label: 'Vitals', href: '/vitals', icon: Activity, roles: ['admin', 'doctor', 'nurse'] },
+  { label: 'AI Notes', href: '/ai-notes', icon: Brain, roles: ['admin', 'doctor', 'nurse'] },
   { label: 'Users', href: '/users', icon: UserCog, roles: ['admin'] },
 ];
 
