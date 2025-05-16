@@ -81,7 +81,7 @@ const Dashboard = () => {
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-8">
       <div>
-        <h1 className="text-2xl sm:text-2xl md:text-3xl font-bold text-blue-700 truncate">Welcome back, {currentUser?.name}</h1>
+        <h1 className="text-2xl sm:text-2xl md:text-3xl font-bold text-medical-doctor truncate">Welcome back, {currentUser?.name}</h1>
         <p className="text-sm md:text-base text-gray-600 mt-1 md:mt-2">
           Access your management tools and information below
         </p>
@@ -89,10 +89,10 @@ const Dashboard = () => {
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
         {/* APPOINTMENTS - Highest priority */}
-        <Card className="overflow-hidden border border-border/60 transition-all hover:border-blue-500/20 hover:shadow-md">
+        <Card className="overflow-hidden border border-border/60 transition-all hover:border-medical-doctor/20 hover:shadow-md">
           <CardHeader className="pb-2 p-4 sm:p-5">
-            <div className="size-10 sm:size-12 lg:size-14 rounded-md bg-blue-100 flex items-center justify-center mb-2">
-              <CalendarClock className="size-6 sm:size-7 lg:size-8 text-blue-700" />
+            <div className="size-10 sm:size-12 lg:size-14 rounded-md bg-medical-doctor/10 flex items-center justify-center mb-2">
+              <CalendarClock className="size-6 sm:size-7 lg:size-8 text-medical-doctor" />
             </div>
             <CardTitle className="text-lg sm:text-xl">Today's Schedule</CardTitle>
             <CardDescription className="text-xs sm:text-sm">Upcoming appointments</CardDescription>
@@ -108,7 +108,7 @@ const Dashboard = () => {
           <CardFooter className="p-4 sm:p-5 pt-2">
             <Button 
               onClick={() => handleNavigate('/appointments')}
-              className="w-full h-8 sm:h-9 text-xs sm:text-sm bg-blue-700 hover:bg-blue-800 text-white"
+              className="w-full h-8 sm:h-9 text-xs sm:text-sm bg-medical-doctor hover:bg-medical-doctor-dark text-white"
             >
               View Calendar
             </Button>
@@ -116,10 +116,10 @@ const Dashboard = () => {
         </Card>
         
         {/* PATIENTS - Second priority */}
-        <Card className="overflow-hidden border border-border/60 transition-all hover:border-blue-500/20 hover:shadow-md">
+        <Card className="overflow-hidden border border-border/60 transition-all hover:border-medical-nurse/20 hover:shadow-md">
           <CardHeader className="pb-2 p-4 sm:p-5">
-            <div className="size-10 sm:size-12 lg:size-14 rounded-md bg-green-100 flex items-center justify-center mb-2">
-              <Users className="size-6 sm:size-7 lg:size-8 text-green-700" />
+            <div className="size-10 sm:size-12 lg:size-14 rounded-md bg-medical-nurse/10 flex items-center justify-center mb-2">
+              <Users className="size-6 sm:size-7 lg:size-8 text-medical-nurse" />
             </div>
             <CardTitle className="text-lg sm:text-xl">Patients</CardTitle>
             <CardDescription className="text-xs sm:text-sm">Manage patient records</CardDescription>
@@ -136,7 +136,7 @@ const Dashboard = () => {
             <Button 
               onClick={() => handleNavigate('/patients')}
               variant="outline" 
-              className="w-full h-8 sm:h-9 text-xs sm:text-sm hover:bg-green-700 hover:text-white"
+              className="w-full h-8 sm:h-9 text-xs sm:text-sm hover:bg-medical-nurse hover:text-white"
             >
               View Patients
             </Button>
@@ -144,10 +144,10 @@ const Dashboard = () => {
         </Card>
         
         {/* USERS - Lowest priority */}
-        <Card className="overflow-hidden border border-border/60 transition-all hover:border-blue-500/20 hover:shadow-md">
+        <Card className="overflow-hidden border border-border/60 transition-all hover:border-medical-admin/20 hover:shadow-md">
           <CardHeader className="pb-2 p-4 sm:p-5">
-            <div className="size-10 sm:size-12 lg:size-14 rounded-md bg-purple-100 flex items-center justify-center mb-2">
-              <UserCog className="size-6 sm:size-7 lg:size-8 text-purple-700" />
+            <div className="size-10 sm:size-12 lg:size-14 rounded-md bg-medical-admin/10 flex items-center justify-center mb-2">
+              <UserCog className="size-6 sm:size-7 lg:size-8 text-medical-admin" />
             </div>
             <CardTitle className="text-lg sm:text-xl">Users</CardTitle>
             <CardDescription className="text-xs sm:text-sm">Manage system access</CardDescription>
@@ -164,7 +164,7 @@ const Dashboard = () => {
             <Button 
               onClick={() => handleNavigate('/users')}
               variant="outline" 
-              className="w-full h-8 sm:h-9 text-xs sm:text-sm hover:bg-purple-700 hover:text-white"
+              className="w-full h-8 sm:h-9 text-xs sm:text-sm hover:bg-medical-admin hover:text-white"
             >
               Manage Users
             </Button>

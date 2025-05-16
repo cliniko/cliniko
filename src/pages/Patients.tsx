@@ -20,7 +20,8 @@ import {
   ArrowLeft,
   Eye,
   FileText,
-  Calendar as CalendarIcon2
+  Calendar as CalendarIcon2,
+  MoreVertical
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -47,7 +48,13 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Patients = () => {
   const navigate = useNavigate();
@@ -245,145 +252,268 @@ const Patients = () => {
     return age;
   };
 
+  // Mobile card view component
+  const MobilePatientsList = () => (
+    <div className="space-y-4 md:hidden">
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center p-6 bg-white rounded-md shadow">
+          <Loader2 className="h-8 w-8 animate-spin text-medical-doctor mb-4" />
+          <p className="text-sm text-gray-500">Loading patients...</p>
+        </div>
+      ) : patientsData?.patients && patientsData.patients.length === 0 ? (
+        <div className="flex flex-col items-center justify-center p-8 bg-white rounded-md shadow text-center">
+          <UserPlus className="h-12 w-12 text-gray-300 mb-4" />
+          <h3 className="text-base font-medium text-gray-700">No patients found</h3>
+          <p className="text-sm text-gray-500 mt-1 max-w-xs">
+            {searchTerm 
+              ? `No results found for "${searchTerm}". Try a different search term.` 
+              : "Start by registering your first patient using the button below."}
+          </p>
+          {!searchTerm && (
+            <Button 
+              onClick={() => setIsAddModalOpen(true)}
+              className="mt-4 bg-medical-doctor hover:bg-medical-doctor-dark"
+              size="sm"
+            >
+              <UserPlus className="h-4 w-4 mr-2" />
+              Register New Patient
+            </Button>
+          )}
+        </div>
+      ) : (
+        patientsData?.patients.map((patient) => (
+          <Card key={patient.id} className="overflow-hidden">
+            <CardHeader className="p-4 pb-2">
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="text-base font-medium">{patient.name}</CardTitle>
+                  <CardDescription className="text-sm flex items-center gap-2 mt-1">
+                    {patient.gender && (
+                      <Badge variant="outline" className="capitalize">
+                        {patient.gender}
+                      </Badge>
+                    )}
+                    {patient.dateOfBirth && (
+                      <Badge variant="outline" className="capitalize">
+                        {calculateAge(patient.dateOfBirth)} yrs
+                      </Badge>
+                    )}
+                  </CardDescription>
+                </div>
+                {(patient.position || patient.designation) && (
+                  <Badge variant="outline" className="capitalize">
+                    {patient.position || patient.designation}
+                  </Badge>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="p-4 pt-2">
+              {patient.contact && (
+                <p className="text-sm text-gray-700 truncate mb-1 flex items-center">
+                  <span className="font-medium w-16">Contact:</span> 
+                  <span className="truncate">{patient.contact}</span>
+                </p>
+              )}
+              {patient.email && (
+                <p className="text-sm text-gray-700 truncate flex items-center">
+                  <span className="font-medium w-16">Email:</span> 
+                  <span className="truncate">{patient.email}</span>
+                </p>
+              )}
+            </CardContent>
+            <CardFooter className="p-2 flex justify-end gap-1 bg-muted/10 border-t">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs font-normal"
+                onClick={() => handleViewDetails(patient.id)}
+              >
+                <Eye className="h-3.5 w-3.5 mr-1" />
+                Details
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs font-normal"
+                onClick={() => handleAddConsult(patient.id)}
+              >
+                <FileText className="h-3.5 w-3.5 mr-1" />
+                Consult
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs font-normal"
+                onClick={() => handleSetAppointment(patient.id)}
+              >
+                <CalendarIcon2 className="h-3.5 w-3.5 mr-1" />
+                Schedule
+              </Button>
+            </CardFooter>
+          </Card>
+        ))
+      )}
+    </div>
+  );
+
+  // Desktop table view component
+  const DesktopPatientsList = () => (
+    <div className="hidden md:block rounded-md shadow overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>Gender</TableHead>
+            <TableHead>Age</TableHead>
+            <TableHead>Position & Designation</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isLoading ? (
+            <TableRow>
+              <TableCell colSpan={5} className="h-24 text-center">
+                <div className="flex items-center justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin mr-2 text-medical-doctor" />
+                  <span className="text-gray-500">Loading patients...</span>
+                </div>
+              </TableCell>
+            </TableRow>
+          ) : patientsData?.patients && patientsData.patients.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={5} className="h-24 text-center">
+                <div className="flex flex-col items-center justify-center">
+                  <UserPlus className="h-8 w-8 text-gray-300 mb-2" />
+                  <p className="text-gray-500">No patients found</p>
+                  {searchTerm && (
+                    <p className="text-sm text-gray-400 mt-1">
+                      No results found for "{searchTerm}"
+                    </p>
+                  )}
+                </div>
+              </TableCell>
+            </TableRow>
+          ) : (
+            patientsData?.patients.map((patient) => (
+              <TableRow key={patient.id}>
+                <TableCell className="font-medium">{patient.name}</TableCell>
+                <TableCell className="capitalize">{patient.gender}</TableCell>
+                <TableCell>{patient.dateOfBirth ? calculateAge(patient.dateOfBirth) : "—"}</TableCell>
+                <TableCell>
+                  {patient.position && patient.designation 
+                    ? `${patient.position}, ${patient.designation}`
+                    : patient.position || patient.designation || "—"}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleViewDetails(patient.id)}
+                      title="View Details"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => handleAddConsult(patient.id)}
+                      title="New Consult"
+                    >
+                      <FileText className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => handleSetAppointment(patient.id)}
+                      title="Schedule"
+                    >
+                      <CalendarIcon2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
+  );
+
   return (
-    <div className="container mx-auto max-w-6xl p-4 space-y-6">
+    <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-blue-700">Patient Records</h1>
-        <p className="text-gray-600 mt-2">Search through the patient registry.</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-medical-doctor">Patient Records</h1>
+        <p className="text-gray-600 mt-1">Search through the patient registry.</p>
       </div>
       
       <Card className="border shadow-sm">
-        <CardContent className="pt-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex flex-col space-y-4">
-            <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
               <div className="relative flex-grow">
-                <div className="flex">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Input 
                     type="text"
                     placeholder="Search patients..."
-                    className="flex-1 pr-10"
+                    className="flex-1"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                   />
-                  <Button 
-                    className="ml-2 bg-blue-700 hover:bg-blue-800"
-                    onClick={handleSearch}
-                  >
-                    Search
-                  </Button>
-                  <Button 
-                    className="ml-2" 
-                    variant="outline" 
-                    onClick={() => refetchPatients()}
-                  >
-                    View All Records
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      className="bg-medical-doctor hover:bg-medical-doctor-dark sm:flex-none"
+                      onClick={handleSearch}
+                    >
+                      <Search className="h-4 w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Search</span>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setSearchTerm('');
+                        refetchPatients();
+                      }}
+                      className="sm:flex-none"
+                    >
+                      <span className="hidden sm:inline">View All Records</span>
+                      <span className="sm:hidden">All</span>
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
             
-            <div className="rounded-md overflow-x-auto border">
-              <Table>
-                <TableHeader className="bg-gray-50">
-                  <TableRow>
-                    <TableHead className="py-3 px-4 text-sm font-medium">Name</TableHead>
-                    <TableHead className="py-3 px-4 text-sm font-medium">Gender</TableHead>
-                    <TableHead className="py-3 px-4 text-sm font-medium">Age</TableHead>
-                    <TableHead className="py-3 px-4 text-sm font-medium">Position & Designation</TableHead>
-                    <TableHead className="py-3 px-4 text-sm font-medium text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="h-24 text-center">
-                        <div className="flex items-center justify-center">
-                          <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                          Loading patients...
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : patientsData?.patients && patientsData.patients.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="h-24 text-center">
-                        No patients found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    patientsData?.patients.map((patient) => (
-                      <TableRow key={patient.id} className="hover:bg-gray-50">
-                        <TableCell className="py-3 px-4 font-medium">{patient.name}</TableCell>
-                        <TableCell className="py-3 px-4 capitalize">{patient.gender}</TableCell>
-                        <TableCell className="py-3 px-4">{patient.dateOfBirth ? calculateAge(patient.dateOfBirth) : "—"}</TableCell>
-                        <TableCell className="py-3 px-4">
-                          {patient.position && patient.designation 
-                            ? `${patient.position}, ${patient.designation}`
-                            : patient.position || patient.designation || "—"}
-                        </TableCell>
-                        <TableCell className="py-3 px-4 text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex items-center gap-1.5"
-                              onClick={() => handleAddConsult(patient.id)}
-                            >
-                              <FileText className="h-3.5 w-3.5" />
-                              <span>New Consult</span>
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex items-center gap-1.5"
-                              onClick={() => handleSetAppointment(patient.id)}
-                            >
-                              <CalendarIcon2 className="h-3.5 w-3.5" />
-                              <span>Schedule</span>
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => handleViewDetails(patient.id)}
-                              title="View Details"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+            {/* Mobile and Desktop Views */}
+            <MobilePatientsList />
+            <DesktopPatientsList />
             
-            <div className="flex justify-between items-center mt-4">
+            <div className="flex flex-col-reverse sm:flex-row justify-between items-center gap-4 mt-4">
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="flex items-center gap-1"
+                className="w-full sm:w-auto flex items-center justify-center gap-1"
                 onClick={() => navigate('/dashboard')}
               >
                 <ArrowLeft className="h-4 w-4" />
-                Back to Home
+                <span>Back to Home</span>
               </Button>
               
               <Button 
                 size="sm"
-                className="bg-blue-700 hover:bg-blue-800"
+                className="w-full sm:w-auto bg-medical-doctor hover:bg-medical-doctor-dark"
                 onClick={() => setIsAddModalOpen(true)}
               >
                 <UserPlus className="h-4 w-4 mr-1.5" />
-                Register New Patient
+                <span>Register New Patient</span>
               </Button>
             </div>
             
             {/* Pagination */}
             {patientsData?.totalPages && patientsData.totalPages > 1 && (
               <Pagination className="mx-auto mt-4">
-                <PaginationContent className="flex-wrap">
+                <PaginationContent className="flex flex-wrap gap-1">
                   <PaginationItem>
                     <PaginationPrevious 
                       className={`${page === 1 ? 'pointer-events-none opacity-50' : ''}`}
@@ -405,7 +535,7 @@ const Patients = () => {
                         pageNumber = i + 1;
                       } else {
                         return (
-                          <PaginationItem key="ellipsis-end">
+                          <PaginationItem key="ellipsis-end" className="hidden sm:flex">
                             <PaginationEllipsis />
                           </PaginationItem>
                         );
@@ -414,7 +544,7 @@ const Patients = () => {
                       // If on last 3 pages, show last 5 pages
                       if (i === 0) {
                         return (
-                          <PaginationItem key="ellipsis-start">
+                          <PaginationItem key="ellipsis-start" className="hidden sm:flex">
                             <PaginationEllipsis />
                           </PaginationItem>
                         );
@@ -425,13 +555,13 @@ const Patients = () => {
                       // Otherwise show 2 before current page, current page, and 2 after
                       if (i === 0) {
                         return (
-                          <PaginationItem key="ellipsis-start">
+                          <PaginationItem key="ellipsis-start" className="hidden sm:flex">
                             <PaginationEllipsis />
                           </PaginationItem>
                         );
                       } else if (i === 4) {
                         return (
-                          <PaginationItem key="ellipsis-end">
+                          <PaginationItem key="ellipsis-end" className="hidden sm:flex">
                             <PaginationEllipsis />
                           </PaginationItem>
                         );
@@ -442,8 +572,11 @@ const Patients = () => {
                     
                     if (pageNumber === 0) return null;
                     
+                    // On mobile, only show current, previous and next page numbers
+                    const isMobileVisible = pageNumber === page || pageNumber === page - 1 || pageNumber === page + 1;
+                    
                     return (
-                      <PaginationItem key={pageNumber}>
+                      <PaginationItem key={pageNumber} className={!isMobileVisible ? 'hidden sm:flex' : ''}>
                         <PaginationLink
                           onClick={() => setPage(pageNumber)}
                           isActive={pageNumber === page}
@@ -467,29 +600,29 @@ const Patients = () => {
         </CardContent>
       </Card>
         
-        <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent>
-            <DialogHeader>
+      <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
             <DialogTitle>Register New Patient</DialogTitle>
-              <DialogDescription>
+            <DialogDescription>
               Enter patient details to create a new record
-              </DialogDescription>
-            </DialogHeader>
-            
+            </DialogDescription>
+          </DialogHeader>
+          
           <div className="grid grid-cols-1 gap-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name <span className="text-destructive">*</span></Label>
-                <Input 
-                  id="name" 
-                  value={name} 
+              <Input 
+                id="name" 
+                value={name} 
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter patient's full name"
-                />
-              </div>
-              
+              />
+            </div>
+            
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="dob">Date of Birth (YYYY-MM-DD) <span className="text-destructive">*</span></Label>
+                <Label htmlFor="dob">Date of Birth <span className="text-destructive">*</span></Label>
                 <div className="flex">
                   <div className="relative flex-1">
                     <Input
@@ -527,11 +660,11 @@ const Patients = () => {
                   <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                     <PopoverTrigger asChild>
                       <span className="sr-only">Open calendar</span>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dob}
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dob}
                         onSelect={(date) => {
                           if (date) {
                             setDob(date);
@@ -539,12 +672,12 @@ const Patients = () => {
                             setIsCalendarOpen(false);
                           }
                         }}
-                      initialFocus
-                      disabled={(date) => date > new Date()}
+                        initialFocus
+                        disabled={(date) => date > new Date()}
                         fromDate={new Date("1900-01-01")}
-                    />
-                  </PopoverContent>
-                </Popover>
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
               
@@ -561,29 +694,29 @@ const Patients = () => {
                   </SelectContent>
                 </Select>
               </div>
-              </div>
-              
-              <div className="space-y-2">
+            </div>
+            
+            <div className="space-y-2">
               <Label htmlFor="contact">Contact Number</Label>
-                <Input 
-                  id="contact" 
-                  value={contact}
+              <Input 
+                id="contact" 
+                value={contact}
                 onChange={(e) => setContact(e.target.value)}
                 placeholder="Enter contact number"
-                />
-              </div>
-              
-              <div className="space-y-2">
+              />
+            </div>
+            
+            <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  value={email}
+              <Input 
+                id="email" 
+                type="email" 
+                value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter email address"
-                />
-              </div>
-              
+              />
+            </div>
+            
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="position">Position</Label>
@@ -618,19 +751,19 @@ const Patients = () => {
             </div>
           </div>
           
-          <div className="flex justify-end space-x-4">
+          <div className="flex justify-end gap-3">
             <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
-              <Button 
-                onClick={handleNewPatient}
-                disabled={isSubmitting}
-              className="bg-blue-700 hover:bg-blue-800"
+            <Button 
+              onClick={handleNewPatient}
+              disabled={isSubmitting}
+              className="bg-medical-doctor hover:bg-medical-doctor-dark"
             >
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isSubmitting ? "Registering..." : "Register Patient"}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

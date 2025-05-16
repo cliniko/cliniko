@@ -33,6 +33,33 @@
     --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
+    
+    /* Medical role-specific colors */
+    --medical-doctor: #2563eb;
+    --medical-doctor-light: #eff6ff;
+    --medical-doctor-medium: #60a5fa;
+    --medical-doctor-dark: #1d4ed8;
+    
+    --medical-nurse: #10b981;
+    --medical-nurse-light: #ecfdf5;
+    --medical-nurse-medium: #34d399;
+    --medical-nurse-dark: #059669;
+    
+    --medical-admin: #8b5cf6;
+    --medical-admin-light: #f5f3ff;
+    --medical-admin-medium: #a78bfa;
+    --medical-admin-dark: #6d28d9;
+    
+    --medical-staff: #64748b;
+    --medical-staff-light: #f8fafc;
+    --medical-staff-medium: #94a3b8;
+    --medical-staff-dark: #475569;
+    
+    /* Status colors */
+    --status-scheduled: var(--medical-nurse);
+    --status-completed: var(--medical-doctor);
+    --status-cancelled: #ef4444;
+    --status-pending: #f59e0b;
   }
 
   .dark {

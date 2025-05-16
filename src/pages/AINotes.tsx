@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { AlertCircle, Bot, ClipboardPaste, Clipboard, Loader2, Sparkles, Brain, User, Cpu, Stars, Key, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger, ResponsiveTabsList, ResponsiveTabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   Accordion,
@@ -640,7 +640,7 @@ FOLLOW-UP: ${extractedInfo.consultation.followUpRecommendations || 'N/A'}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden order-2 lg:order-1">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center text-lg">
               Clinical Notes
@@ -709,7 +709,7 @@ FOLLOW-UP: ${extractedInfo.consultation.followUpRecommendations || 'N/A'}
           </CardContent>
         </Card>
 
-        <div className="space-y-6">
+        <div className="space-y-6 order-1 lg:order-2">
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-lg">Extracted Information</CardTitle>
@@ -745,12 +745,12 @@ FOLLOW-UP: ${extractedInfo.consultation.followUpRecommendations || 'N/A'}
                 </Alert>
               ) : (
                 <Tabs defaultValue="patient" className="w-full">
-                  <TabsList className="grid grid-cols-4 mb-4">
-                    <TabsTrigger value="patient">Patient</TabsTrigger>
-                    <TabsTrigger value="soap">SOAP</TabsTrigger>
-                    <TabsTrigger value="vitals">Vitals</TabsTrigger>
-                    <TabsTrigger value="medications">Medications</TabsTrigger>
-                  </TabsList>
+                  <ResponsiveTabsList className="grid grid-cols-4 mb-4">
+                    <ResponsiveTabsTrigger value="patient" shrink>Patient</ResponsiveTabsTrigger>
+                    <ResponsiveTabsTrigger value="soap" shrink>SOAP</ResponsiveTabsTrigger>
+                    <ResponsiveTabsTrigger value="vitals" shrink>Vitals</ResponsiveTabsTrigger>
+                    <ResponsiveTabsTrigger value="medications" shrink>Meds</ResponsiveTabsTrigger>
+                  </ResponsiveTabsList>
 
                   <TabsContent value="patient" className="space-y-4">
                     <div className="grid grid-cols-2 gap-2">

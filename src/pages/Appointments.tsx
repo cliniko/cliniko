@@ -77,13 +77,13 @@ const Appointments = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'scheduled':
-        return <Badge className="bg-blue-500">Scheduled</Badge>;
+        return <Badge variant="outline" className="bg-medical-nurse/10 text-medical-nurse border-medical-nurse/20">Scheduled</Badge>;
       case 'completed':
-        return <Badge className="bg-green-500">Completed</Badge>;
+        return <Badge variant="outline" className="bg-medical-doctor/10 text-medical-doctor border-medical-doctor/20">Completed</Badge>;
       case 'cancelled':
-        return <Badge className="bg-red-500">Cancelled</Badge>;
+        return <Badge variant="outline" className="bg-medical-danger/10 text-medical-danger border-medical-danger/20">Cancelled</Badge>;
       default:
-        return <Badge>Unknown</Badge>;
+        return <Badge variant="outline">Unknown</Badge>;
     }
   };
   
@@ -111,15 +111,66 @@ const Appointments = () => {
     }
   };
 
+  // Mobile view for appointments
+  const renderMobileAppointments = (appointments: Appointment[]) => {
+    const groupedAppointments = groupAppointmentsByDate(appointments);
+    
+    return (
+      <div className="space-y-4 md:hidden">
+        {Object.entries(groupedAppointments)
+          .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+          .map(([date, appointments]) => (
+            <Card key={date} className="overflow-hidden">
+              <CardHeader className="py-3">
+                <CardTitle className="text-base font-medium">
+                  {formatDate(date)}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="divide-y">
+                  {appointments.map((appointment) => (
+                    <div key={appointment.id} className="p-3">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="font-medium">
+                          {formatAppointmentTime(appointment.appointment_time)}
+                        </div>
+                        {getStatusBadge(appointment.status)}
+                      </div>
+                      <div className="text-sm text-gray-700 mb-1">
+                        <span className="font-medium">Patient: </span>
+                        {appointment.patient_name}
+                      </div>
+                      <div className="text-sm text-gray-700 mb-3">
+                        <span className="font-medium">Nurse: </span>
+                        {appointment.nurse_name}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleViewAppointment(appointment.id)}
+                        className="text-medical-doctor w-full justify-center"
+                      >
+                        View Details
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+      </div>
+    );
+  };
+
   return (
-    <div className="container max-w-6xl mx-auto p-4 space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-blue-700">Appointment Calendar</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-medical-doctor">Appointment Calendar</h1>
           <p className="text-gray-600 mt-1">View and manage scheduled appointments</p>
         </div>
         <Button 
-          className="bg-blue-700 hover:bg-blue-800 flex items-center gap-1.5"
+          className="bg-medical-doctor hover:bg-medical-doctor-dark flex items-center gap-1.5 w-full sm:w-auto"
           onClick={() => navigate('/appointments/new')}
         >
           <CalendarPlus className="h-4 w-4" />
@@ -128,64 +179,74 @@ const Appointments = () => {
       </div>
       
       {isLoading ? (
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-700" />
-          <span className="ml-2 text-lg text-gray-600">Loading appointments...</span>
-        </div>
-      ) : appointmentsData && appointmentsData.length > 0 ? (
-        <div className="space-y-6">
-          {Object.entries(groupAppointmentsByDate(appointmentsData as Appointment[]))
-            .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
-            .map(([date, appointments]) => (
-              <Card key={date} className="overflow-hidden">
-                <CardHeader className="bg-gray-50 pb-3">
-                  <CardTitle className="text-lg text-blue-700">
-                    {formatDate(date)}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[150px]">Time</TableHead>
-                        <TableHead>Patient</TableHead>
-                        <TableHead>Nurse</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {appointments.map((appointment) => (
-                        <TableRow key={appointment.id}>
-                          <TableCell className="font-medium">
-                            {formatAppointmentTime(appointment.appointment_time)}
-                          </TableCell>
-                          <TableCell>{appointment.patient_name}</TableCell>
-                          <TableCell>{appointment.nurse_name}</TableCell>
-                          <TableCell>
-                            {getStatusBadge(appointment.status)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleViewAppointment(appointment.id)}
-                            >
-                              View Details
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            ))}
-        </div>
-      ) : (
-        <Card className="border-dashed">
+        <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-gray-600 mb-4">No appointments scheduled</p>
+            <Loader2 className="h-8 w-8 animate-spin text-medical-doctor mb-4" />
+            <p className="text-sm text-gray-500">Loading appointments...</p>
+          </CardContent>
+        </Card>
+      ) : appointmentsData && appointmentsData.length > 0 ? (
+        <>
+          {/* Mobile view */}
+          {renderMobileAppointments(appointmentsData as Appointment[])}
+          
+          {/* Desktop view */}
+          <div className="hidden md:block space-y-6">
+            {Object.entries(groupAppointmentsByDate(appointmentsData as Appointment[]))
+              .sort(([dateA], [dateB]) => dateA.localeCompare(dateB))
+              .map(([date, appointments]) => (
+                <Card key={date} className="overflow-hidden">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg">
+                      {formatDate(date)}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Time</TableHead>
+                          <TableHead>Patient</TableHead>
+                          <TableHead>Nurse</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {appointments.map((appointment) => (
+                          <TableRow key={appointment.id}>
+                            <TableCell className="font-medium">
+                              {formatAppointmentTime(appointment.appointment_time)}
+                            </TableCell>
+                            <TableCell>{appointment.patient_name}</TableCell>
+                            <TableCell>{appointment.nurse_name}</TableCell>
+                            <TableCell>
+                              {getStatusBadge(appointment.status)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleViewAppointment(appointment.id)}
+                                className="text-medical-doctor"
+                              >
+                                View Details
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              ))}
+          </div>
+        </>
+      ) : (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <CalendarPlus className="h-12 w-12 text-gray-300 mb-4" />
+            <p className="text-gray-500 mb-4">No appointments scheduled</p>
             <Button 
               variant="outline" 
               onClick={() => navigate('/appointments/new')}

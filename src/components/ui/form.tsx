@@ -12,6 +12,7 @@ import {
 
 import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
+import { AlertCircle } from "lucide-react"
 
 const Form = FormProvider
 
@@ -72,8 +73,10 @@ const FormItemContext = React.createContext<FormItemContextValue>(
 
 const FormItem = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => {
+  React.HTMLAttributes<HTMLDivElement> & {
+    hasFeedback?: boolean;
+  }
+>(({ className, hasFeedback = true, ...props }, ref) => {
   const id = React.useId()
 
   return (
@@ -86,8 +89,10 @@ FormItem.displayName = "FormItem"
 
 const FormLabel = React.forwardRef<
   React.ElementRef<typeof LabelPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
->(({ className, ...props }, ref) => {
+  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> & {
+    required?: boolean;
+  }
+>(({ className, required, children, ...props }, ref) => {
   const { error, formItemId } = useFormField()
 
   return (
@@ -96,7 +101,10 @@ const FormLabel = React.forwardRef<
       className={cn(error && "text-destructive", className)}
       htmlFor={formItemId}
       {...props}
-    />
+    >
+      {children}
+      {required && <span className="text-destructive ml-1" aria-hidden="true">*</span>}
+    </Label>
   )
 })
 FormLabel.displayName = "FormLabel"
@@ -133,7 +141,7 @@ const FormDescription = React.forwardRef<
     <p
       ref={ref}
       id={formDescriptionId}
-      className={cn("text-sm text-muted-foreground", className)}
+      className={cn("text-[0.8rem] text-muted-foreground", className)}
       {...props}
     />
   )
@@ -155,14 +163,70 @@ const FormMessage = React.forwardRef<
     <p
       ref={ref}
       id={formMessageId}
-      className={cn("text-sm font-medium text-destructive", className)}
+      className={cn(
+        "flex items-center gap-1.5 text-[0.8rem] font-medium text-destructive",
+        className
+      )}
       {...props}
     >
-      {body}
+      <AlertCircle className="h-3 w-3" aria-hidden="true" />
+      <span>{body}</span>
     </p>
   )
 })
 FormMessage.displayName = "FormMessage"
+
+// New component for consistent form field spacing and sizing
+const FormGroup = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & {
+    horizontal?: boolean;
+    gap?: "default" | "sm" | "lg";
+  }
+>(({ className, children, horizontal = false, gap = "default", ...props }, ref) => {
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        "w-full",
+        horizontal && "sm:flex sm:gap-x-4 sm:items-start",
+        gap === "sm" && "space-y-2",
+        gap === "default" && "space-y-4",
+        gap === "lg" && "space-y-6",
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  )
+})
+FormGroup.displayName = "FormGroup"
+
+// New component for responsive form layouts
+const FormGrid = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & {
+    columns?: number;
+    gap?: "default" | "sm" | "lg";
+  }
+>(({ className, columns = 2, gap = "default", ...props }, ref) => {
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        "w-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4",
+        `sm:grid-cols-${Math.min(columns, 4)}`,
+        gap === "sm" && "gap-2",
+        gap === "default" && "gap-4",
+        gap === "lg" && "gap-6",
+        className
+      )}
+      {...props}
+    />
+  )
+})
+FormGrid.displayName = "FormGrid"
 
 export {
   useFormField,
@@ -173,4 +237,6 @@ export {
   FormDescription,
   FormMessage,
   FormField,
+  FormGroup,
+  FormGrid,
 }

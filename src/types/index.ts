@@ -75,14 +75,15 @@ export interface ICD10Code {
 export interface Consultation {
   id: string;
   patient_id: string;
+  patient_name?: string;
   patient_type: string;
   date: string; // YYYY-MM-DD format
   time: string; // HH:MM format
   chief_complaint: string;
   subjective: string;
-  objective: string[];
-  assessment: string[];
-  plan: string[];
+  objective: { id: string; value: string }[];
+  assessment: string;
+  plan: { id: string; value: string }[];
   vital_signs?: {
     systolicBP?: number | null;
     diastolicBP?: number | null;
@@ -93,14 +94,13 @@ export interface Consultation {
     height?: number | null;
     weight?: number | null;
   };
-  prescription?: {
-    drug: string;
-    form: string;
-    strength: string;
-    quantity: string;
-    instructions: string;
-    indication: string;
-    brand?: string;
+  prescriptions?: {
+    name: string;
+    dosage: string;
+    route: string;
+    frequency: string;
+    duration: string;
+    instructions?: string;
   }[];
   attending_physician: string;
   attending_nurse?: string;

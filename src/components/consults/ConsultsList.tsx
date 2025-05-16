@@ -1,8 +1,15 @@
-
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { FileText, Eye, Edit, Trash, Loader2 } from 'lucide-react';
+import { FileText, Eye, Edit, Trash, Loader2, MoreVertical } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface Consultation {
   id: string;
@@ -57,8 +64,61 @@ const ConsultsList = ({
     );
   }
 
-  return (
-    <div className="bg-white rounded-md shadow overflow-hidden">
+  // Card view for mobile screens
+  const MobileView = () => (
+    <div className="space-y-4 md:hidden">
+      {consultations.map((consult) => (
+        <Card key={consult.id} className="overflow-hidden">
+          <CardHeader className="p-4 pb-2">
+            <div className="flex justify-between items-start">
+              <div>
+                <CardTitle className="text-base font-medium">{consult.patient_name || 'Unknown Patient'}</CardTitle>
+                <CardDescription className="text-sm">
+                  {format(new Date(consult.date), 'MM/dd/yyyy')} at {consult.time}
+                </CardDescription>
+              </div>
+              <Badge variant="outline" className="capitalize">
+                {consult.patient_type}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="p-4 pt-2">
+            <p className="text-sm text-gray-700 truncate">{consult.chief_complaint}</p>
+          </CardContent>
+          <CardFooter className="p-2 flex justify-end bg-muted/10 border-t">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => onView(consult.id)}>
+                  <Eye className="h-4 w-4 mr-2" />
+                  View
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onEdit(consult.id)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => onDelete(consult.id)}
+                  className="text-red-500 focus:text-red-500"
+                >
+                  <Trash className="h-4 w-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </CardFooter>
+        </Card>
+      ))}
+    </div>
+  );
+
+  // Table view for desktop screens
+  const DesktopView = () => (
+    <div className="hidden md:block rounded-md shadow overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow>
@@ -76,7 +136,11 @@ const ConsultsList = ({
               <TableCell>{format(new Date(consult.date), 'MM/dd/yyyy')}</TableCell>
               <TableCell>{consult.time}</TableCell>
               <TableCell>{consult.patient_name || 'Unknown Patient'}</TableCell>
-              <TableCell>{consult.patient_type}</TableCell>
+              <TableCell>
+                <Badge variant="outline" className="capitalize">
+                  {consult.patient_type}
+                </Badge>
+              </TableCell>
               <TableCell className="max-w-xs truncate">{consult.chief_complaint}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end space-x-2">
@@ -112,6 +176,13 @@ const ConsultsList = ({
         </TableBody>
       </Table>
     </div>
+  );
+
+  return (
+    <>
+      <MobileView />
+      <DesktopView />
+    </>
   );
 };
 

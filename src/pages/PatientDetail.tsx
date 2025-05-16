@@ -370,11 +370,7 @@ const PatientDetail = () => {
                           <TableCell>{formatTime(appointment.appointment_time)}</TableCell>
                           <TableCell>{appointment.nurse_name}</TableCell>
                           <TableCell>
-                            <Badge className={
-                              appointment.status === 'scheduled' ? "bg-blue-500" :
-                              appointment.status === 'completed' ? "bg-green-500" :
-                              "bg-red-500"
-                            }>
+                            <Badge variant={appointment.status as "scheduled" | "completed" | "cancelled"}>
                               {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
                             </Badge>
                           </TableCell>

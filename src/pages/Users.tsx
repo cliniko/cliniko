@@ -155,15 +155,30 @@ const Users = () => {
   const getRoleBadgeColor = (role: UserRole) => {
     switch (role) {
       case 'admin':
-        return 'bg-medical-admin-medium text-medical-admin-foreground hover:bg-medical-admin-dark/70';
+        return 'bg-medical-admin/10 text-medical-admin border-medical-admin/20';
       case 'doctor':
-        return 'bg-medical-doctor-medium text-medical-doctor-foreground hover:bg-medical-doctor-dark/70';
+        return 'bg-medical-doctor/10 text-medical-doctor border-medical-doctor/20';
       case 'nurse':
-        return 'bg-medical-nurse-medium text-medical-nurse-foreground hover:bg-medical-nurse-dark/70';
+        return 'bg-medical-nurse/10 text-medical-nurse border-medical-nurse/20';
       case 'staff':
-        return 'bg-medical-staff-medium text-medical-staff-foreground hover:bg-medical-staff-dark/70';
+        return 'bg-medical-staff/10 text-medical-staff border-medical-staff/20';
       default:
-        return 'bg-medical-staff-medium text-medical-staff-foreground hover:bg-medical-staff-dark/70';
+        return 'bg-medical-staff/10 text-medical-staff border-medical-staff/20';
+    }
+  };
+
+  const getRoleColor = (role: UserRole) => {
+    switch (role) {
+      case 'admin':
+        return 'bg-medical-admin text-white';
+      case 'doctor':
+        return 'bg-medical-doctor text-white';
+      case 'nurse':
+        return 'bg-medical-nurse text-white';
+      case 'staff':
+        return 'bg-medical-staff text-white';
+      default:
+        return 'bg-medical-staff text-white';
     }
   };
 
@@ -186,42 +201,87 @@ const Users = () => {
     ? users 
     : users.filter(user => user.role === activeTab);
 
-  // Mobile-friendly table renderer
-  const renderUserRow = (user: UserWithProfile) => (
-    <TableRow key={user.id}>
-      <TableCell className="p-2 md:p-4">
-        <div className="flex items-center space-x-2 md:space-x-3">
-          <Avatar className="hidden sm:inline-flex h-8 w-8 md:h-10 md:w-10">
-            <AvatarFallback className="bg-medical-primary/10 text-medical-primary text-xs md:text-sm">
+  // Card view for mobile
+  const MobileUserCard = ({ user }: { user: UserWithProfile }) => (
+    <div className="p-4 border rounded-lg mb-3 bg-white shadow-sm">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <Avatar className={`h-10 w-10 ${getRoleColor(user.role)}`}>
+            <AvatarFallback className="text-sm">
               {getInitials(user.name)}
             </AvatarFallback>
           </Avatar>
           <div>
-            <p className="font-medium text-sm md:text-base">{user.name}</p>
-            <p className="text-xs text-medical-gray hidden xs:block">{user.email}</p>
+            <p className="font-medium">{user.name}</p>
+            <p className="text-xs text-gray-500">{user.email}</p>
+          </div>
+        </div>
+        <Badge variant="outline" className={`${getRoleBadgeColor(user.role)} capitalize`}>
+          {user.role}
+        </Badge>
+      </div>
+      <div className="flex justify-end gap-2 pt-2 border-t">
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={() => openEditRoleModal(user)}
+          disabled={user.id === currentUser?.id}
+          aria-label={`Edit role for ${user.name}`}
+          className="h-9 text-sm"
+        >
+          <Edit className="h-3.5 w-3.5 mr-1.5" />
+          Edit Role
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="sm"
+          disabled={user.id === currentUser?.id}
+          aria-label={`Deactivate ${user.name}`}
+          className="h-9 text-sm text-medical-danger"
+        >
+          <UserMinus className="h-3.5 w-3.5 mr-1.5" />
+          Deactivate
+        </Button>
+      </div>
+    </div>
+  );
+
+  // Mobile-friendly table renderer
+  const renderUserRow = (user: UserWithProfile) => (
+    <TableRow key={user.id}>
+      <TableCell className="py-3 px-4">
+        <div className="flex items-center gap-3">
+          <Avatar className={`hidden sm:inline-flex h-9 w-9 ${getRoleColor(user.role)}`}>
+            <AvatarFallback className="text-sm">
+              {getInitials(user.name)}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <p className="font-medium">{user.name}</p>
+            <p className="text-xs text-gray-500 hidden xs:block">{user.email}</p>
           </div>
         </div>
       </TableCell>
-      <TableCell className="p-2 md:p-4">
-        <Badge className={`${getRoleBadgeColor(user.role)} text-xs whitespace-nowrap`}>
+      <TableCell className="py-3 px-4">
+        <Badge variant="outline" className={`${getRoleBadgeColor(user.role)} capitalize whitespace-nowrap`}>
           <div className="flex items-center">
             <span className="hidden sm:inline-block">{getRoleIcon(user.role)}</span>
-            <span className="capitalize">{user.role}</span>
+            <span>{user.role}</span>
           </div>
         </Badge>
       </TableCell>
-      <TableCell className="p-2 md:p-4 text-right">
+      <TableCell className="py-3 px-4 text-right">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Open menu">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem 
               onClick={() => openEditRoleModal(user)}
               disabled={user.id === currentUser?.id}
-              className="cursor-pointer"
+              className="cursor-pointer py-2"
             >
               <Edit className="mr-2 h-4 w-4" />
               <span>Edit Role</span>
@@ -229,7 +289,7 @@ const Users = () => {
             <DropdownMenuSeparator />
             <DropdownMenuItem 
               disabled={user.id === currentUser?.id}
-              className="text-medical-danger cursor-pointer"
+              className="text-medical-danger cursor-pointer py-2"
             >
               <UserMinus className="mr-2 h-4 w-4" />
               <span>Deactivate</span>
@@ -241,21 +301,21 @@ const Users = () => {
   );
   
   return (
-    <div className="space-y-6 px-2 sm:px-4 md:px-6">
+    <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-medical-primary">User Management</h1>
-          <p className="text-medical-gray text-xs sm:text-sm">Manage system users and their permissions</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-medical-doctor">User Management</h1>
+          <p className="text-gray-600 mt-1">Manage system users and their permissions</p>
         </div>
         
         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-medical-primary hover:bg-medical-primary/90 w-full sm:w-auto">
-              <Plus size={16} className="mr-1" />
+            <Button className="bg-medical-doctor hover:bg-medical-doctor-dark w-full sm:w-auto">
+              <Plus size={16} className="mr-2" />
               Add New User
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add New User</DialogTitle>
               <DialogDescription>
@@ -306,22 +366,42 @@ const Users = () => {
                     <SelectValue placeholder="Select a role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="doctor">Doctor</SelectItem>
-                    <SelectItem value="nurse">Nurse</SelectItem>
-                    <SelectItem value="admin">Administrator</SelectItem>
-                    <SelectItem value="staff">Staff</SelectItem>
+                    <SelectItem value="doctor">
+                      <div className="flex items-center">
+                        {getRoleIcon('doctor')}
+                        Doctor
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="nurse">
+                      <div className="flex items-center">
+                        {getRoleIcon('nurse')}
+                        Nurse
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="admin">
+                      <div className="flex items-center">
+                        {getRoleIcon('admin')}
+                        Administrator
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="staff">
+                      <div className="flex items-center">
+                        {getRoleIcon('staff')}
+                        Staff
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>
+            <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setIsAddModalOpen(false)} className="w-full sm:w-auto">
                 Cancel
               </Button>
               <Button 
                 onClick={handleNewUser}
-                className="bg-medical-primary hover:bg-medical-primary/90"
+                className="bg-medical-doctor hover:bg-medical-doctor-dark w-full sm:w-auto"
               >
                 Save User
               </Button>
@@ -331,7 +411,7 @@ const Users = () => {
 
         {/* Edit Role Modal */}
         <Dialog open={isEditRoleModalOpen} onOpenChange={setIsEditRoleModalOpen}>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Edit User Role</DialogTitle>
               <DialogDescription>
@@ -376,13 +456,13 @@ const Users = () => {
               </Select>
             </div>
             
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsEditRoleModalOpen(false)}>
+            <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setIsEditRoleModalOpen(false)} className="w-full sm:w-auto">
                 Cancel
               </Button>
               <Button 
                 onClick={handleUpdateRole}
-                className="bg-medical-primary hover:bg-medical-primary/90"
+                className="bg-medical-doctor hover:bg-medical-doctor-dark w-full sm:w-auto"
               >
                 Update Role
               </Button>
@@ -407,17 +487,18 @@ const Users = () => {
             size="sm" 
             onClick={fetchUsers}
             className="flex items-center ml-2"
+            aria-label="Refresh user list"
           >
             <RefreshCw size={14} className="mr-1" />
             Refresh
           </Button>
-              </div>
+        </div>
               
         {/* Mobile tab navigation with sheet */}
         <div className="flex sm:hidden justify-between items-center mb-4">
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="outline" size="sm" className="flex items-center">
+              <Button variant="outline" size="sm" className="flex items-center h-9 px-3">
                 <Menu className="h-4 w-4 mr-2" />
                 {activeTab === 'all' ? 'All Users' : 
                   activeTab === 'admin' ? 'Administrators' : 
@@ -425,51 +506,51 @@ const Users = () => {
                   activeTab === 'nurse' ? 'Nurses' : 'Staff'}
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[240px] sm:w-[300px]">
-              <div className="py-6">
-                <h3 className="text-lg font-medium mb-5">Filter Users</h3>
-                <div className="grid gap-4">
-                  <Button 
-                    variant={activeTab === 'all' ? 'default' : 'outline'} 
-                    onClick={() => setActiveTab('all')}
-                    className="justify-start"
-                  >
-                    <UserRound className="mr-2 h-4 w-4" />
-                    All Users
-                  </Button>
-                  <Button 
-                    variant={activeTab === 'admin' ? 'default' : 'outline'} 
-                    onClick={() => setActiveTab('admin')}
-                    className="justify-start"
-                  >
-                    <Shield className="mr-2 h-4 w-4" />
-                    Administrators
-                  </Button>
-                  <Button 
-                    variant={activeTab === 'doctor' ? 'default' : 'outline'} 
-                    onClick={() => setActiveTab('doctor')}
-                    className="justify-start"
-                  >
-                    <UserCog className="mr-2 h-4 w-4" />
-                    Doctors
-                  </Button>
-                  <Button 
-                    variant={activeTab === 'nurse' ? 'default' : 'outline'} 
-                    onClick={() => setActiveTab('nurse')}
-                    className="justify-start"
-                  >
-                    <UserCheck className="mr-2 h-4 w-4" />
-                    Nurses
-                  </Button>
-                  <Button 
-                    variant={activeTab === 'staff' ? 'default' : 'outline'} 
-                    onClick={() => setActiveTab('staff')}
-                    className="justify-start"
-                  >
-                    <UserRound className="mr-2 h-4 w-4" />
-                    Staff
-                  </Button>
+            <SheetContent side="left" className="w-[260px] p-0">
+              <div className="p-4 border-b">
+                <h3 className="text-lg font-medium">Filter Users</h3>
               </div>
+              <div className="p-4 space-y-3">
+                <Button 
+                  variant="ghost"
+                  onClick={() => setActiveTab('all')}
+                  className={`w-full justify-start ${activeTab === 'all' ? 'bg-medical-doctor/10 text-medical-doctor font-medium' : ''}`}
+                >
+                  <UserRound className="mr-2 h-4 w-4" />
+                  All Users
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setActiveTab('admin')}
+                  className={`w-full justify-start ${activeTab === 'admin' ? 'bg-medical-admin/10 text-medical-admin font-medium' : ''}`}
+                >
+                  <Shield className="mr-2 h-4 w-4" />
+                  Administrators
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setActiveTab('doctor')}
+                  className={`w-full justify-start ${activeTab === 'doctor' ? 'bg-medical-doctor/10 text-medical-doctor font-medium' : ''}`}
+                >
+                  <UserCog className="mr-2 h-4 w-4" />
+                  Doctors
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setActiveTab('nurse')}
+                  className={`w-full justify-start ${activeTab === 'nurse' ? 'bg-medical-nurse/10 text-medical-nurse font-medium' : ''}`}
+                >
+                  <UserCheck className="mr-2 h-4 w-4" />
+                  Nurses
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setActiveTab('staff')}
+                  className={`w-full justify-start ${activeTab === 'staff' ? 'bg-medical-staff/10 text-medical-staff font-medium' : ''}`}
+                >
+                  <UserRound className="mr-2 h-4 w-4" />
+                  Staff
+                </Button>
               </div>
             </SheetContent>
           </Sheet>
@@ -478,48 +559,66 @@ const Users = () => {
             variant="outline" 
             size="sm" 
             onClick={fetchUsers}
-            className="flex items-center"
-            aria-label="Refresh users"
+            className="h-9 w-9 p-0 flex items-center justify-center"
+            aria-label="Refresh user list"
           >
             <RefreshCw size={14} />
           </Button>
-            </div>
+        </div>
         
         <TabsContent value="all" className="m-0">
-        <Card>
-          <CardHeader className="pb-2">
+          <Card>
+            <CardHeader className="pb-2">
               <CardTitle className="text-lg sm:text-xl">System Users</CardTitle>
               <CardDescription>
                 Total users: {users.length}
               </CardDescription>
-          </CardHeader>
-            <CardContent className="p-0 sm:p-2 md:p-6 overflow-x-auto">
+            </CardHeader>
+            <CardContent className="p-0 md:p-6 overflow-x-auto">
               {loading ? (
-                <div className="flex justify-center items-center h-40">
-                  <Loader2 className="animate-spin h-8 w-8 text-medical-primary" />
+                <div className="flex justify-center items-center h-[200px]">
+                  <Loader2 className="animate-spin h-8 w-8 text-medical-doctor" />
                 </div>
               ) : filteredUsers.length === 0 ? (
-                <div className="bg-gray-50 p-4 rounded-md flex items-center justify-center h-40">
-                  <div className="text-center">
-                    <UserCog size={32} className="mx-auto text-gray-400 mb-2" />
-                    <p className="text-gray-500">No users found in this category.</p>
-                  </div>
+                <div className="p-8 flex flex-col items-center justify-center text-center">
+                  <UserCog size={32} className="text-gray-300 mb-4" />
+                  <p className="text-gray-500 font-medium">No users found in this category</p>
+                  <p className="text-sm text-gray-400 mt-1 mb-4">Try a different filter or add a new user</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="mt-2"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add New User
+                  </Button>
                 </div>
               ) : (
-                <div className="overflow-x-auto -mx-4 sm:mx-0">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[50%] md:w-auto">User</TableHead>
-                        <TableHead className="w-[30%] md:w-auto">Role</TableHead>
-                        <TableHead className="w-[20%] md:w-[100px] text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredUsers.map(renderUserRow)}
-                    </TableBody>
-                  </Table>
-                          </div>
+                <>
+                  {/* Mobile card view */}
+                  <div className="md:hidden p-3">
+                    {filteredUsers.map(user => (
+                      <MobileUserCard key={user.id} user={user} />
+                    ))}
+                  </div>
+                
+                  {/* Desktop table view */}
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>User</TableHead>
+                          <TableHead>Role</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredUsers.map(renderUserRow)}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
@@ -535,33 +634,50 @@ const Users = () => {
                   Total {roleTab}s: {users.filter(u => u.role === roleTab).length}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="p-0 sm:p-2 md:p-6 overflow-x-auto">
+              <CardContent className="p-0 md:p-6 overflow-x-auto">
                 {loading ? (
-                  <div className="flex justify-center items-center h-40">
-                    <Loader2 className="animate-spin h-8 w-8 text-medical-primary" />
+                  <div className="flex justify-center items-center h-[200px]">
+                    <Loader2 className="animate-spin h-8 w-8 text-medical-doctor" />
                   </div>
                 ) : filteredUsers.length === 0 ? (
-                  <div className="bg-gray-50 p-4 rounded-md flex items-center justify-center h-40">
-                    <div className="text-center">
-                      <UserCog size={32} className="mx-auto text-gray-400 mb-2" />
-                      <p className="text-gray-500">No {roleTab}s found.</p>
-                    </div>
+                  <div className="p-8 flex flex-col items-center justify-center text-center">
+                    <UserCog size={32} className="text-gray-300 mb-4" />
+                    <p className="text-gray-500 font-medium">No {roleTab}s found</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsAddModalOpen(true)}
+                      className="mt-4"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add New {roleTab.charAt(0).toUpperCase() + roleTab.slice(1)}
+                    </Button>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto -mx-4 sm:mx-0">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="w-[50%] md:w-auto">User</TableHead>
-                          <TableHead className="w-[30%] md:w-auto">Role</TableHead>
-                          <TableHead className="w-[20%] md:w-[100px] text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredUsers.map(renderUserRow)}
-                      </TableBody>
-                    </Table>
-                  </div>
+                  <>
+                    {/* Mobile card view */}
+                    <div className="md:hidden p-3">
+                      {filteredUsers.map(user => (
+                        <MobileUserCard key={user.id} user={user} />
+                      ))}
+                    </div>
+                  
+                    {/* Desktop table view */}
+                    <div className="hidden md:block">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>User</TableHead>
+                            <TableHead>Role</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredUsers.map(renderUserRow)}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </>
                 )}
               </CardContent>
             </Card>
@@ -569,62 +685,62 @@ const Users = () => {
         ))}
       </Tabs>
       
-      <Card className="border-l-4 border-l-medical-primary">
+      <Card className="border-l-4 border-l-medical-doctor">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg sm:text-xl">User Access Roles</CardTitle>
           <CardDescription>
             Overview of system roles and their permissions
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-4 py-2 sm:p-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
-            <div className="bg-medical-doctor-light p-3 sm:p-4 rounded-md">
+            <div className="bg-gray-50 p-3 sm:p-4 rounded-md border-l-4 border-l-medical-doctor">
               <div className="flex items-center mb-2">
                 {getRoleIcon('doctor')}
-                <h3 className="text-base sm:text-lg font-medium text-medical-doctor-dark">Doctor</h3>
+                <h3 className="text-base sm:text-lg font-medium text-medical-doctor">Doctor</h3>
               </div>
-              <p className="text-xs sm:text-sm text-medical-gray">
+              <p className="text-xs sm:text-sm text-gray-600">
                 Full access to all patient records, consultations, and medical data. 
                 Can create and edit records, prescribe medications, and manage patient care.
               </p>
             </div>
             
-            <div className="bg-medical-nurse-light p-3 sm:p-4 rounded-md">
+            <div className="bg-gray-50 p-3 sm:p-4 rounded-md border-l-4 border-l-medical-nurse">
               <div className="flex items-center mb-2">
                 {getRoleIcon('nurse')}
-                <h3 className="text-base sm:text-lg font-medium text-medical-nurse-dark">Nurse</h3>
+                <h3 className="text-base sm:text-lg font-medium text-medical-nurse">Nurse</h3>
               </div>
-              <p className="text-xs sm:text-sm text-medical-gray">
+              <p className="text-xs sm:text-sm text-gray-600">
                 Can view all patient records, create and update vital signs, add notes, 
                 and assist with patient management. Cannot prescribe medications.
               </p>
             </div>
             
-            <div className="bg-medical-admin-light p-3 sm:p-4 rounded-md">
+            <div className="bg-gray-50 p-3 sm:p-4 rounded-md border-l-4 border-l-medical-admin">
               <div className="flex items-center mb-2">
                 {getRoleIcon('admin')}
-                <h3 className="text-base sm:text-lg font-medium text-medical-admin-dark">Administrator</h3>
+                <h3 className="text-base sm:text-lg font-medium text-medical-admin">Administrator</h3>
               </div>
-              <p className="text-xs sm:text-sm text-medical-gray">
+              <p className="text-xs sm:text-sm text-gray-600">
                 Manages system settings, user accounts, and access permissions. 
                 Can view reports and statistics but has limited access to medical data.
               </p>
             </div>
             
-            <div className="bg-medical-staff-light p-3 sm:p-4 rounded-md">
+            <div className="bg-gray-50 p-3 sm:p-4 rounded-md border-l-4 border-l-medical-staff">
               <div className="flex items-center mb-2">
                 {getRoleIcon('staff')}
-                <h3 className="text-base sm:text-lg font-medium text-medical-staff-dark">Staff</h3>
+                <h3 className="text-base sm:text-lg font-medium text-medical-staff">Staff</h3>
               </div>
-              <p className="text-xs sm:text-sm text-medical-gray">
+              <p className="text-xs sm:text-sm text-gray-600">
                 Limited access for reception and administrative staff. 
                 Can view basic patient information, schedule appointments, 
                 and manage non-medical tasks.
               </p>
             </div>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
