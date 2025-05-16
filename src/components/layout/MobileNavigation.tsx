@@ -25,7 +25,6 @@ const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: Home },
   { label: 'Patients', href: '/patients', icon: Users },
   { label: 'Consults', href: '/consults', icon: ClipboardList, roles: ['admin', 'doctor', 'nurse'] },
-  { label: 'Vitals', href: '/vitals', icon: Activity, roles: ['admin', 'doctor', 'nurse'] },
   { label: 'AI Notes', href: '/ai-notes', icon: Brain, roles: ['admin', 'doctor', 'nurse'] },
   { label: 'Users', href: '/users', icon: UserCog, roles: ['admin'] },
 ];

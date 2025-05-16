@@ -1,3 +1,4 @@
+import { Consultation } from "@/types";
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -95,18 +96,19 @@ interface StaffOption {
 }
 
 interface ConsultFormProps {
-  onSave: (consultData: any) => void;
+  patientId?: string | null;
+  onSave: (consultData: Omit<Consultation, "id" | "created_at">) => void;
   onCancel: () => void;
 }
 
-const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
+const ConsultForm = ({ patientId, onSave, onCancel }: ConsultFormProps) => {
   // Form and state setup
   const form = useForm<ConsultFormValues>({
     resolver: zodResolver(ConsultFormSchema),
     defaultValues: {
       date: new Date(),
       time: format(new Date(), 'HH:mm'),
-      patient_id: '',
+      patient_id: patientId || '',
       patient_type: '',
       chief_complaint: '',
       subjective: '',
@@ -133,6 +135,13 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
   
   const { toast } = useToast();
   const { currentUser } = useAuth();
+
+  // Update patient_id when patientId prop changes
+  useEffect(() => {
+    if (patientId) {
+      form.setValue('patient_id', patientId);
+    }
+  }, [patientId, form]);
 
   // Fetch patients from Supabase
   useEffect(() => {
@@ -340,8 +349,8 @@ const ConsultForm = ({ onSave, onCancel }: ConsultFormProps) => {
                 <FormLabel>Patient</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
-                  disabled={isLoadingPatients}
+                  value={field.value}
+                  disabled={isLoadingPatients || !!patientId}
                 >
                   <FormControl>
                     <SelectTrigger>

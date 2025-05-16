@@ -14,7 +14,9 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Consults from "./pages/Consults";
+import NewConsultation from "./pages/NewConsultation";
 import Patients from "./pages/Patients";
+import PatientDetail from "./pages/PatientDetail";
 import Users from "./pages/Users";
 import Vitals from "./pages/Vitals";
 import AINotes from "./pages/AINotes";
@@ -22,6 +24,8 @@ import Documentation from "./pages/Documentation";
 import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 import ResetPassword from '@/pages/ResetPassword';
+import Appointments from './pages/Appointments';
+import NewAppointment from './pages/NewAppointment';
 
 // Create a custom queryClient with optimized settings
 const queryClient = new QueryClient({
@@ -76,10 +80,46 @@ const App = () => (
               />
               
               <Route 
+                path="/consults/new" 
+                element={
+                  <RequireAuth allowedRoles={['admin', 'doctor', 'nurse']}>
+                    <NewConsultation />
+                  </RequireAuth>
+                } 
+              />
+              
+              <Route 
                 path="/patients" 
                 element={
                   <RequireAuth allowedRoles={['admin', 'doctor', 'nurse', 'staff']}>
                     <Patients />
+                  </RequireAuth>
+                }
+              />
+              
+              <Route 
+                path="/patients/:id" 
+                element={
+                  <RequireAuth allowedRoles={['admin', 'doctor', 'nurse', 'staff']}>
+                    <PatientDetail />
+                  </RequireAuth>
+                }
+              />
+              
+              <Route 
+                path="/appointments" 
+                element={
+                  <RequireAuth allowedRoles={['admin', 'doctor', 'nurse']}>
+                    <Appointments />
+                  </RequireAuth>
+                }
+              />
+              
+              <Route 
+                path="/appointments/new" 
+                element={
+                  <RequireAuth allowedRoles={['admin', 'nurse']}>
+                    <NewAppointment />
                   </RequireAuth>
                 }
               />

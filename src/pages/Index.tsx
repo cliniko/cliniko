@@ -21,7 +21,7 @@ const Index = () => {
             navigate('/consults', { replace: true });
             break;
           case 'nurse':
-            navigate('/vitals', { replace: true });
+            navigate('/dashboard', { replace: true });
             break;
           case 'staff':
             navigate('/patients', { replace: true });

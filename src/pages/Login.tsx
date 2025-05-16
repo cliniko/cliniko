@@ -75,23 +75,23 @@ const Login = () => {
           <CardHeader className="space-y-1 px-4 sm:px-6 py-4 sm:py-5">
             <CardTitle className="text-lg sm:text-xl md:text-2xl font-bold text-center">Sign in to your account</CardTitle>
             <CardDescription className="text-center text-xs sm:text-sm">Enter your credentials to continue</CardDescription>
-          </CardHeader>
-          <form onSubmit={handleSubmit}>
+        </CardHeader>
+        <form onSubmit={handleSubmit}>
             <CardContent className="space-y-3 sm:space-y-4 px-4 sm:px-6">
               <div className="space-y-1 sm:space-y-1.5">
                 <Label htmlFor="email" className="text-xs sm:text-sm">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
+              <Input 
+                id="email" 
+                type="email" 
                   placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                   className="h-8 sm:h-9 text-xs sm:text-sm"
-                  required
-                />
-              </div>
+                required
+              />
+            </div>
               <div className="space-y-1 sm:space-y-1.5">
-                <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between">
                   <Label htmlFor="password" className="text-xs sm:text-sm">Password</Label>
                   <Dialog open={isResetOpen} onOpenChange={setIsResetOpen}>
                     <DialogTrigger asChild>
@@ -99,7 +99,7 @@ const Login = () => {
                         variant="link" 
                         className="h-auto p-0 text-[10px] sm:text-xs"
                       >
-                        Forgot password?
+                  Forgot password?
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-[425px]">
@@ -141,42 +141,42 @@ const Login = () => {
                       </form>
                     </DialogContent>
                   </Dialog>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="h-8 sm:h-9 text-xs sm:text-sm"
-                  required
-                />
               </div>
-            </CardContent>
+              <Input 
+                id="password" 
+                type="password"
+                  placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                  className="h-8 sm:h-9 text-xs sm:text-sm"
+                required
+              />
+            </div>
+          </CardContent>
             <CardFooter className="flex flex-col space-y-3 sm:space-y-4 px-4 sm:px-6 pb-5 sm:pb-6">
-              <Button 
-                type="submit" 
+            <Button 
+              type="submit" 
                 className="w-full h-9 sm:h-10 text-xs sm:text-sm" 
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
+              disabled={loading}
+            >
+              {loading ? (
+                <>
                     <Loader2 className="mr-1.5 sm:mr-2 size-3.5 sm:size-4 animate-spin" />
-                    Signing In...
-                  </>
-                ) : (
-                  "Sign In"
-                )}
-              </Button>
+                  Signing In...
+                </>
+              ) : (
+                "Sign In"
+              )}
+            </Button>
               <p className="text-center text-[10px] sm:text-xs md:text-sm text-muted-foreground">
-                Don't have an account?{' '}
+              Don't have an account?{' '}
                 <Link to="/register" className="text-primary font-medium hover:underline">
-                  Sign up
-                </Link>
-              </p>
-            </CardFooter>
-          </form>
-        </Card>
+                Sign up
+              </Link>
+            </p>
+          </CardFooter>
+        </form>
+      </Card>
       </div>
     </div>
   );

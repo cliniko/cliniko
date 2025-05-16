@@ -13,7 +13,8 @@ import {
   Brain,
   Upload,
   ImageIcon,
-  Camera
+  Camera,
+  CalendarPlus
 } from 'lucide-react';
 
 // shadcn components
@@ -186,10 +187,10 @@ export function Sidebar() {
 
   const navItems: NavItem[] = [
     { title: 'Dashboard', href: '/dashboard', icon: Home },
-    { title: 'Consults', href: '/consults', icon: FileText },
     { title: 'Patient List', href: '/patients', icon: Users },
+    { title: 'Consults', href: '/consults', icon: FileText },
+    { title: 'Appointments', href: '/appointments', icon: CalendarPlus },
     { title: 'User Management', href: '/users', icon: UserCog },
-    { title: 'Vital Signs Monitoring', href: '/vitals', icon: Activity },
     { title: 'AI Notes (Beta)', href: '/ai-notes', icon: Brain },
   ];
 

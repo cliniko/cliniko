@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -13,6 +15,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  CalendarPlus,
+  ClipboardCheck,
+  ArrowLeft,
+  Eye,
+  FileText,
+  Calendar as CalendarIcon2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -39,12 +47,16 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 
 const Patients = () => {
+  const navigate = useNavigate();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
+  const [searchResults, setSearchResults] = useState<Patient[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   
   // Form states
   const [name, setName] = useState('');
@@ -52,7 +64,8 @@ const Patients = () => {
   const [gender, setGender] = useState('');
   const [contact, setContact] = useState('');
   const [email, setEmail] = useState('');
-  const [address, setAddress] = useState('');
+  const [position, setPosition] = useState('');
+  const [designation, setDesignation] = useState('');
   const [medicalHistory, setMedicalHistory] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -70,10 +83,12 @@ const Patients = () => {
     queryKey: ['patients', page, searchTerm],
     queryFn: async () => {
       try {
+        // Always show all patients in the main list, regardless of search
         let query = supabase
           .from('patients')
           .select('*', { count: 'exact' });
           
+        // Filter by search term if provided
         if (searchTerm) {
           query = query.ilike('name', `%${searchTerm}%`);
         }
@@ -96,7 +111,8 @@ const Patients = () => {
           gender: item.gender,
           contact: item.contact || undefined,
           email: item.email || undefined,
-          address: item.address || undefined,
+          position: item.position || undefined,
+          designation: item.designation || undefined,
           medicalHistory: item.medical_history || undefined,
           createdAt: item.created_at
         }));
@@ -113,7 +129,7 @@ const Patients = () => {
     }
   });
   
-  const handleSearch = () => {
+  const handleSearch = async () => {
     setPage(1); // Reset to first page
     refetchPatients();
   };
@@ -124,8 +140,29 @@ const Patients = () => {
     setGender('');
     setContact('');
     setEmail('');
-    setAddress('');
+    setPosition('');
+    setDesignation('');
     setMedicalHistory('');
+  };
+  
+  const handleAddConsult = (patientId: string) => {
+    // Navigate to the consultation form with patient ID
+    // This will open the full consultation form for doctors
+    navigate(`/consults/new?patientId=${patientId}`);
+  };
+  
+  const handleSetAppointment = (patientId: string) => {
+    // Navigate to the appointment scheduling form with patient ID
+    // This will open a simplified version of the consult form for nurses
+    // Only includes subjective/objective findings, nurse name, and scheduled date/time
+    navigate(`/appointments/new?patientId=${patientId}`);
+  };
+  
+  const handleViewDetails = (patientId: string) => {
+    // Navigate to patient details page showing:
+    // 1. Patient's personal and demographic information
+    // 2. List of associated consultation records
+    navigate(`/patients/${patientId}`);
   };
   
   const handleNewPatient = async () => {
@@ -150,16 +187,20 @@ const Patients = () => {
       
       setIsSubmitting(true);
       
+      // Ensure the date format follows FHIR standard (YYYY-MM-DD)
+      const formattedDob = format(dob, 'yyyy-MM-dd');
+      
       const { data, error } = await supabase
         .from('patients')
         .insert([
           {
             name,
-            date_of_birth: format(dob, 'yyyy-MM-dd'),
+            date_of_birth: formattedDob, // ISO 8601 format for FHIR compliance
             gender,
             contact: contact || null,
             email: email || null,
-            address: address || null,
+            position: position || null,
+            designation: designation || null,
             medical_history: medicalHistory || null,
             created_by: currentUser.id
           }
@@ -205,185 +246,391 @@ const Patients = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-        <h1 className="text-2xl font-bold text-medical-staff">Patient Management</h1>
-        
-        {/* Search bar and Add button */}
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-          <div className="relative flex-grow">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-medical-gray" />
-            <Input
-              type="text"
-              placeholder="Search patients..."
-              className="pl-8 w-full"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            />
-          </div>
-          
-          <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-medical-staff hover:bg-medical-staff-dark">
-                <UserPlus size={16} className="mr-1" />
-                Add Patient
-              </Button>
-            </DialogTrigger>
-          </Dialog>
-        </div>
+    <div className="container mx-auto max-w-6xl p-4 space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-blue-700">Patient Records</h1>
+        <p className="text-gray-600 mt-2">Search through the patient registry.</p>
       </div>
       
-      {/* Patient Table */}
-      <Card className="shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg text-medical-staff-dark">Patient List</CardTitle>
-          <CardDescription>
-            {patientsData?.totalCount || 0} total patients
-          </CardDescription>
-        </CardHeader>
-        <div className="rounded-md border overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[150px] sm:w-[200px] py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm">NAME</TableHead>
-                <TableHead className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm">AGE</TableHead>
-                <TableHead className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm">GENDER</TableHead>
-                <TableHead className="hidden sm:table-cell py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm">CONTACT</TableHead>
-                <TableHead className="hidden md:table-cell py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm">EMAIL</TableHead>
-                <TableHead className="text-right py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm">ACTIONS</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-                {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-16 sm:h-24 text-center text-xs sm:text-sm">
-                      <div className="flex items-center justify-center">
-                      <Loader2 className="size-4 sm:size-5 animate-spin mr-1.5 sm:mr-2" />
-                        Loading patients...
-                      </div>
-                  </TableCell>
-                </TableRow>
-                ) : patientsData?.patients && patientsData.patients.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-16 sm:h-24 text-center text-xs sm:text-sm">
-                      No patients found
-                  </TableCell>
-                </TableRow>
-                ) : (
-                  patientsData?.patients.map((patient) => (
-                  <TableRow key={patient.id}>
-                    <TableCell className="font-medium py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm">{patient.name}</TableCell>
-                    <TableCell className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm">{patient.dateOfBirth ? `${calculateAge(patient.dateOfBirth)} yrs` : '—'}</TableCell>
-                    <TableCell className="py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm">
-                      <Badge variant="outline" className="capitalize text-[10px] sm:text-xs h-5 sm:h-6">
-                        {patient.gender}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="hidden sm:table-cell py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm">
-                        {patient.contact || '—'}
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell py-2 sm:py-3 px-2 sm:px-4 text-xs sm:text-sm truncate max-w-[150px]">
-                        {patient.email || '—'}
-                    </TableCell>
-                    <TableCell className="text-right py-2 sm:py-3 px-2 sm:px-4">
-                      <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8">
-                        <span className="sr-only">View Patient</span>
-                        <ChevronRight className="size-3.5 sm:size-4 text-primary" />
-                      </Button>
-                    </TableCell>
+      <Card className="border shadow-sm">
+        <CardContent className="pt-6">
+          <div className="flex flex-col space-y-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="relative flex-grow">
+                <div className="flex">
+                  <Input 
+                    type="text"
+                    placeholder="Search patients..."
+                    className="flex-1 pr-10"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  />
+                  <Button 
+                    className="ml-2 bg-blue-700 hover:bg-blue-800"
+                    onClick={handleSearch}
+                  >
+                    Search
+                  </Button>
+                  <Button 
+                    className="ml-2" 
+                    variant="outline" 
+                    onClick={() => refetchPatients()}
+                  >
+                    View All Records
+                  </Button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="rounded-md overflow-x-auto border">
+              <Table>
+                <TableHeader className="bg-gray-50">
+                  <TableRow>
+                    <TableHead className="py-3 px-4 text-sm font-medium">Name</TableHead>
+                    <TableHead className="py-3 px-4 text-sm font-medium">Gender</TableHead>
+                    <TableHead className="py-3 px-4 text-sm font-medium">Age</TableHead>
+                    <TableHead className="py-3 px-4 text-sm font-medium">Position & Designation</TableHead>
+                    <TableHead className="py-3 px-4 text-sm font-medium text-right">Actions</TableHead>
                   </TableRow>
-                  ))
-                )}
-            </TableBody>
-          </Table>
-          </div>
-          
-          {/* Pagination */}
-        {patientsData?.totalPages && patientsData.totalPages > 1 && (
-          <Pagination className="mx-auto mt-6">
-            <PaginationContent className="flex-wrap">
-              <PaginationItem>
-                <PaginationPrevious 
-                  className={`text-xs sm:text-sm h-8 sm:h-9 ${page === 1 ? 'pointer-events-none opacity-50' : ''}`}
-                  onClick={() => setPage(prev => Math.max(prev - 1, 1))}
-                />
-              </PaginationItem>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-24 text-center">
+                        <div className="flex items-center justify-center">
+                          <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                          Loading patients...
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : patientsData?.patients && patientsData.patients.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-24 text-center">
+                        No patients found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    patientsData?.patients.map((patient) => (
+                      <TableRow key={patient.id} className="hover:bg-gray-50">
+                        <TableCell className="py-3 px-4 font-medium">{patient.name}</TableCell>
+                        <TableCell className="py-3 px-4 capitalize">{patient.gender}</TableCell>
+                        <TableCell className="py-3 px-4">{patient.dateOfBirth ? calculateAge(patient.dateOfBirth) : "—"}</TableCell>
+                        <TableCell className="py-3 px-4">
+                          {patient.position && patient.designation 
+                            ? `${patient.position}, ${patient.designation}`
+                            : patient.position || patient.designation || "—"}
+                        </TableCell>
+                        <TableCell className="py-3 px-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex items-center gap-1.5"
+                              onClick={() => handleAddConsult(patient.id)}
+                            >
+                              <FileText className="h-3.5 w-3.5" />
+                              <span>New Consult</span>
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex items-center gap-1.5"
+                              onClick={() => handleSetAppointment(patient.id)}
+                            >
+                              <CalendarIcon2 className="h-3.5 w-3.5" />
+                              <span>Schedule</span>
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => handleViewDetails(patient.id)}
+                              title="View Details"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+            
+            <div className="flex justify-between items-center mt-4">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-1"
+                onClick={() => navigate('/dashboard')}
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Home
+              </Button>
               
-              {Array.from({ length: Math.min(patientsData.totalPages, 5) }, (_, i) => {
-                // Logic to show page numbers
-                let pageNumber = 0;
-                const totalPages = patientsData.totalPages;
-                
-                if (totalPages <= 5) {
-                  // If 5 or fewer pages, show all
-                  pageNumber = i + 1;
-                } else if (page <= 3) {
-                  // If on pages 1-3, show pages 1-5
-                  if (i < 4) {
-                    pageNumber = i + 1;
-                  } else {
+              <Button 
+                size="sm"
+                className="bg-blue-700 hover:bg-blue-800"
+                onClick={() => setIsAddModalOpen(true)}
+              >
+                <UserPlus className="h-4 w-4 mr-1.5" />
+                Register New Patient
+              </Button>
+            </div>
+            
+            {/* Pagination */}
+            {patientsData?.totalPages && patientsData.totalPages > 1 && (
+              <Pagination className="mx-auto mt-4">
+                <PaginationContent className="flex-wrap">
+                  <PaginationItem>
+                    <PaginationPrevious 
+                      className={`${page === 1 ? 'pointer-events-none opacity-50' : ''}`}
+                      onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+                    />
+                  </PaginationItem>
+                  
+                  {Array.from({ length: Math.min(patientsData.totalPages, 5) }, (_, i) => {
+                    // Logic to show page numbers
+                    let pageNumber = 0;
+                    const totalPages = patientsData.totalPages;
+                    
+                    if (totalPages <= 5) {
+                      // If 5 or fewer pages, show all
+                      pageNumber = i + 1;
+                    } else if (page <= 3) {
+                      // If on pages 1-3, show pages 1-5
+                      if (i < 4) {
+                        pageNumber = i + 1;
+                      } else {
+                        return (
+                          <PaginationItem key="ellipsis-end">
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        );
+                      }
+                    } else if (page >= totalPages - 2) {
+                      // If on last 3 pages, show last 5 pages
+                      if (i === 0) {
+                        return (
+                          <PaginationItem key="ellipsis-start">
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        );
+                      } else {
+                        pageNumber = totalPages - 4 + i;
+                      }
+                    } else {
+                      // Otherwise show 2 before current page, current page, and 2 after
+                      if (i === 0) {
+                        return (
+                          <PaginationItem key="ellipsis-start">
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        );
+                      } else if (i === 4) {
+                        return (
+                          <PaginationItem key="ellipsis-end">
+                            <PaginationEllipsis />
+                          </PaginationItem>
+                        );
+                      } else {
+                        pageNumber = page - 1 + (i - 1);
+                      }
+                    }
+                    
+                    if (pageNumber === 0) return null;
+                    
                     return (
-                      <PaginationItem key="ellipsis-end">
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    );
-                  }
-                } else if (page >= totalPages - 2) {
-                  // If on last 3 pages, show last 5 pages
-                  if (i === 0) {
-                    return (
-                      <PaginationItem key="ellipsis-start">
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    );
-                  } else {
-                    pageNumber = totalPages - 4 + i;
-                  }
-                } else {
-                  // Otherwise show 2 before current page, current page, and 2 after
-                  if (i === 0) {
-                    return (
-                      <PaginationItem key="ellipsis-start">
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    );
-                  } else if (i === 4) {
-                    return (
-                      <PaginationItem key="ellipsis-end">
-                        <PaginationEllipsis />
-                      </PaginationItem>
-                    );
-                  } else {
-                    pageNumber = page - 1 + (i - 1);
-                  }
-                }
-                
-                if (pageNumber === 0) return null;
-                
-                      return (
-                  <PaginationItem key={pageNumber}>
-                    <PaginationLink
-                      className={`text-xs sm:text-sm h-8 sm:h-9 ${pageNumber === page ? 'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground' : ''}`}
+                      <PaginationItem key={pageNumber}>
+                        <PaginationLink
                           onClick={() => setPage(pageNumber)}
-                      isActive={pageNumber === page}
+                          isActive={pageNumber === page}
                         >
                           {pageNumber}
-                    </PaginationLink>
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  })}
+                  
+                  <PaginationItem>
+                    <PaginationNext 
+                      className={`${page === patientsData.totalPages ? 'pointer-events-none opacity-50' : ''}`}
+                      onClick={() => setPage(prev => Math.min(prev + 1, patientsData.totalPages))}
+                    />
                   </PaginationItem>
-                      );
-                    })}
-                    
-                <PaginationItem>
-                  <PaginationNext 
-                    className={`text-xs sm:text-sm h-8 sm:h-9 ${page === patientsData.totalPages ? 'pointer-events-none opacity-50' : ''}`}
-                    onClick={() => setPage(prev => Math.min(prev + 1, patientsData.totalPages))}
-                  />
-                </PaginationItem>
-              </PaginationContent>
-            </Pagination>
+                </PaginationContent>
+              </Pagination>
             )}
+          </div>
+        </CardContent>
       </Card>
+        
+        <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+        <DialogContent>
+            <DialogHeader>
+            <DialogTitle>Register New Patient</DialogTitle>
+              <DialogDescription>
+              Enter patient details to create a new record
+              </DialogDescription>
+            </DialogHeader>
+            
+          <div className="grid grid-cols-1 gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name <span className="text-destructive">*</span></Label>
+                <Input 
+                  id="name" 
+                  value={name} 
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter patient's full name"
+                />
+              </div>
+              
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="dob">Date of Birth (YYYY-MM-DD) <span className="text-destructive">*</span></Label>
+                <div className="flex">
+                  <div className="relative flex-1">
+                    <Input
+                      id="dob"
+                      className="pr-10"
+                      placeholder="YYYY-MM-DD"
+                      value={dob ? format(dob, "yyyy-MM-dd") : ""}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === "") {
+                          setDob(undefined);
+                        } else {
+                          try {
+                            // Only set if it's a valid date
+                            const date = new Date(val);
+                            if (!isNaN(date.getTime())) {
+                              setDob(date);
+                            }
+                          } catch (e) {
+                            // Invalid date - do nothing
+                          }
+                        }
+                      }}
+                    />
+                    <Button
+                      variant="ghost"
+                      type="button"
+                      size="icon"
+                      className="absolute right-0 top-0 h-full px-3 text-muted-foreground"
+                      onClick={() => setIsCalendarOpen(true)}
+                    >
+                      <CalendarIcon className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                    <PopoverTrigger asChild>
+                      <span className="sr-only">Open calendar</span>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dob}
+                        onSelect={(date) => {
+                          if (date) {
+                            setDob(date);
+                            // Close the calendar after selection
+                            setIsCalendarOpen(false);
+                          }
+                        }}
+                      initialFocus
+                      disabled={(date) => date > new Date()}
+                        fromDate={new Date("1900-01-01")}
+                    />
+                  </PopoverContent>
+                </Popover>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="gender">Gender <span className="text-destructive">*</span></Label>
+                <Select value={gender} onValueChange={setGender}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              </div>
+              
+              <div className="space-y-2">
+              <Label htmlFor="contact">Contact Number</Label>
+                <Input 
+                  id="contact" 
+                  value={contact}
+                onChange={(e) => setContact(e.target.value)}
+                placeholder="Enter contact number"
+                />
+              </div>
+              
+              <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter email address"
+                />
+              </div>
+              
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="position">Position</Label>
+                <Input
+                  id="position"
+                  value={position}
+                  onChange={(e) => setPosition(e.target.value)}
+                  placeholder="Enter position"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="designation">Designation</Label>
+                <Input
+                  id="designation"
+                  value={designation}
+                  onChange={(e) => setDesignation(e.target.value)}
+                  placeholder="Enter designation"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="medical-history">Medical History</Label>
+              <Textarea
+                id="medical-history"
+                value={medicalHistory}
+                onChange={(e) => setMedicalHistory(e.target.value)}
+                placeholder="Enter any relevant medical history"
+                className="min-h-[80px]"
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end space-x-4">
+            <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
+              <Button 
+                onClick={handleNewPatient}
+                disabled={isSubmitting}
+              className="bg-blue-700 hover:bg-blue-800"
+            >
+              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isSubmitting ? "Registering..." : "Register Patient"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
     </div>
   );
 };

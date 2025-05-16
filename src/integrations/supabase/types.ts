@@ -9,6 +9,86 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      appointments: {
+        Row: {
+          appointment_date: string
+          appointment_time: string
+          attending_nurse: string | null
+          chief_complaint: string
+          consultation_id: string | null
+          created_at: string
+          created_by: string
+          id: string
+          objective: Json | null
+          patient_id: string
+          status: string
+          subjective: string | null
+          updated_at: string
+          vital_signs: Json | null
+        }
+        Insert: {
+          appointment_date: string
+          appointment_time: string
+          attending_nurse?: string | null
+          chief_complaint: string
+          consultation_id?: string | null
+          created_at?: string
+          created_by: string
+          id?: string
+          objective?: Json | null
+          patient_id: string
+          status: string
+          subjective?: string | null
+          updated_at?: string
+          vital_signs?: Json | null
+        }
+        Update: {
+          appointment_date?: string
+          appointment_time?: string
+          attending_nurse?: string | null
+          chief_complaint?: string
+          consultation_id?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          objective?: Json | null
+          patient_id?: string
+          status?: string
+          subjective?: string | null
+          updated_at?: string
+          vital_signs?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_attending_nurse_fkey"
+            columns: ["attending_nurse"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: false
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      },
       consultations: {
         Row: {
           assessment: Json | null
@@ -114,11 +194,13 @@ export type Database = {
           created_at: string
           created_by: string
           date_of_birth: string
+          designation: string | null
           email: string | null
           gender: string
           id: string
           medical_history: string | null
           name: string
+          position: string | null
         }
         Insert: {
           address?: string | null
@@ -126,11 +208,13 @@ export type Database = {
           created_at?: string
           created_by: string
           date_of_birth: string
+          designation?: string | null
           email?: string | null
           gender: string
           id?: string
           medical_history?: string | null
           name: string
+          position?: string | null
         }
         Update: {
           address?: string | null
@@ -138,11 +222,13 @@ export type Database = {
           created_at?: string
           created_by?: string
           date_of_birth?: string
+          designation?: string | null
           email?: string | null
           gender?: string
           id?: string
           medical_history?: string | null
           name?: string
+          position?: string | null
         }
         Relationships: []
       }
@@ -228,7 +314,43 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      convert_appointment_to_consultation: {
+        Args: { appointment_id_param: string; physician_id_param: string }
+        Returns: string
+      }
+      get_appointments_with_details: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          patient_id: string
+          patient_name: string
+          appointment_date: string
+          appointment_time: string
+          chief_complaint: string
+          subjective: string
+          objective: Json
+          attending_nurse: string
+          nurse_name: string
+          status: string
+          consultation_id: string
+          vital_signs: Json
+          created_by: string
+          created_at: string
+        }[]
+      }
+      get_patient_appointments: {
+        Args: { patient_id_param: string }
+        Returns: {
+          id: string
+          appointment_date: string
+          appointment_time: string
+          chief_complaint: string
+          attending_nurse: string
+          nurse_name: string
+          status: string
+          consultation_id: string
+        }[]
+      }
     }
     Enums: {
       user_role: "admin" | "doctor" | "nurse" | "staff"
