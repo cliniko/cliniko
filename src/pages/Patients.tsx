@@ -628,12 +628,6 @@ const Patients = () => {
       </Card>
         
       <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogTrigger asChild>
-          <Button className="bg-medical-doctor hover:bg-medical-doctor-dark">
-            <UserPlus className="mr-2 h-4 w-4" />
-            Add Patient
-          </Button>
-        </DialogTrigger>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Add New Patient</DialogTitle>
