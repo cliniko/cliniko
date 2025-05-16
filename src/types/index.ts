@@ -68,9 +68,9 @@ export interface DrugWithForm {
 
 // Add ICD-10 specific interfaces
 export interface ICD10Code {
-  id: string;
   code: string;
-  description: string;
+  name: string;
+  description?: string;
 }
 
 // Consultation interface for the consultations table in Supabase
@@ -111,6 +111,10 @@ export interface Consultation {
   created_by: string;
   created_at: string;
   isArchived?: boolean;
+  encounterType: EncounterType;
+  referenceConsultationId?: string | null;
+  assessmentItems?: AssessmentItem[] | null;
+  additionalRemarks?: string | null;
 }
 
 /**
@@ -157,4 +161,26 @@ export interface AppointmentSubmission {
   consultation_id: string | null;
   created_by: string;
   isArchived?: boolean;
+}
+
+// Add these new interfaces
+
+export interface AssessmentItem {
+  id: string;
+  icdCode: string | null;
+  icdName: string | null;
+  description: string;
+}
+
+export enum EncounterType {
+  NEW_CONSULT = "NEW_CONSULT",
+  FOLLOW_UP = "FOLLOW_UP",
+  EMERGENCY = "EMERGENCY"
+}
+
+// Add a type for the consultation reference display
+export interface ConsultationReference {
+  id: string;
+  date: string;
+  chiefComplaint: string;
 }

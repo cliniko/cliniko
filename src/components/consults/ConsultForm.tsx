@@ -97,15 +97,27 @@ interface StaffOption {
 
 interface ConsultFormProps {
   patientId?: string | null;
+  initialData?: Consultation | null;
   onSave: (consultData: Omit<Consultation, "id" | "created_at">) => void;
   onCancel: () => void;
 }
 
-const ConsultForm = ({ patientId, onSave, onCancel }: ConsultFormProps) => {
+const ConsultForm = ({ patientId, initialData, onSave, onCancel }: ConsultFormProps) => {
   // Form and state setup
   const form = useForm<ConsultFormValues>({
     resolver: zodResolver(ConsultFormSchema),
-    defaultValues: {
+    defaultValues: initialData ? {
+      date: new Date(initialData.date),
+      time: initialData.time,
+      patient_id: initialData.patient_id,
+      patient_type: initialData.patient_type,
+      chief_complaint: initialData.chief_complaint,
+      subjective: initialData.subjective,
+      attending_physician: initialData.attending_physician,
+      attending_nurse: initialData.attending_nurse || '',
+      bp_monitoring: initialData.bp_monitoring,
+      hba1c_monitoring: initialData.hba1c_monitoring,
+    } : {
       date: new Date(),
       time: format(new Date(), 'HH:mm'),
       patient_id: patientId || '',
@@ -120,12 +132,35 @@ const ConsultForm = ({ patientId, onSave, onCancel }: ConsultFormProps) => {
   });
   
   // State for data that doesn't easily fit in react-hook-form
-  const [objectives, setObjectives] = useState<ObjectiveItem[]>([]);
-  const [plans, setPlans] = useState<PlanItem[]>([]);
-  const [assessment, setAssessment] = useState<string>('');
+  const [objectives, setObjectives] = useState<ObjectiveItem[]>(initialData?.objective || []);
+  const [plans, setPlans] = useState<PlanItem[]>(initialData?.plan || []);
+  const [assessment, setAssessment] = useState<string>(initialData?.assessment || '');
   const [selectedDrug, setSelectedDrug] = useState<Drug | null>(null);
-  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>(
+    initialData?.prescriptions?.map(p => ({
+      drug: { id: '', drug_id: '', name: p.name, form: '' },
+      form: p.dosage || '',
+      strength: '',
+      quantity: '',
+      instructions: p.instructions || '',
+      indication: '',
+    })) || []
+  );
   const [showPrescriptionForm, setShowPrescriptionForm] = useState<boolean>(false);
+  
+  // Initialize vitals from initialData if it exists
+  const [vitals, setVitals] = useState<VitalSigns>(
+    initialData?.vital_signs || {
+      systolicBP: null,
+      diastolicBP: null,
+      temperature: null,
+      heartRate: null,
+      respiratoryRate: null,
+      oxygenSaturation: null,
+      height: null,
+      weight: null
+    }
+  );
   
   // Data loading states
   const [patients, setPatients] = useState<PatientOption[]>([]);
@@ -251,27 +286,26 @@ const ConsultForm = ({ patientId, onSave, onCancel }: ConsultFormProps) => {
       const consultData = {
         ...data,
         date: format(data.date, 'yyyy-MM-dd'),
-        objective: objectives.map(obj => obj.value),
-        assessment: assessment.split('\n').filter(line => line.trim().length > 0),
-        plan: plans.map(plan => plan.value),
-        prescription: prescriptions.map(rx => ({
-          drug: rx.drug.name,
-          form: rx.form,
-          strength: rx.strength,
-          quantity: rx.quantity,
-          instructions: rx.instructions,
-          indication: rx.indication,
-          brand: rx.brand
+        objective: objectives,
+        assessment: assessment,
+        plan: plans,
+        prescriptions: prescriptions.map(rx => ({
+          name: rx.drug.name,
+          dosage: rx.form,
+          route: rx.route || '',
+          frequency: rx.frequency || '',
+          duration: rx.quantity || '',
+          instructions: rx.instructions || ''
         })),
         created_by: currentUser?.id || '',
       };
       
       onSave(consultData);
     } catch (error: any) {
-      console.error("Error creating consultation:", error);
+      console.error("Error processing consultation data:", error);
       toast({
         title: "Error",
-        description: error.message || "There was an error creating the consultation",
+        description: error.message || "There was an error processing the consultation data",
         variant: "destructive"
       });
     }

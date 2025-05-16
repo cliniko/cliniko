@@ -95,6 +95,8 @@ export type Database = {
       consultations: {
         Row: {
           assessment: Json | null
+          assessment_items: Json | null
+          additional_remarks: string | null
           attending_nurse: string | null
           attending_physician: string
           bp_monitoring: boolean | null
@@ -102,12 +104,13 @@ export type Database = {
           created_at: string
           created_by: string
           date: string
+          encounter_type: Database["public"]["Enums"]["encounter_type"]
           hba1c_monitoring: boolean | null
           id: string
           is_archived: boolean
           objective: Json | null
           patient_id: string
-          patient_type: string
+          reference_consultation_id: string | null
           plan: Json | null
           prescription: Json | null
           subjective: string | null
@@ -116,6 +119,8 @@ export type Database = {
         }
         Insert: {
           assessment?: Json | null
+          assessment_items?: Json | null
+          additional_remarks?: string | null
           attending_nurse?: string | null
           attending_physician: string
           bp_monitoring?: boolean | null
@@ -123,12 +128,13 @@ export type Database = {
           created_at?: string
           created_by: string
           date: string
+          encounter_type: Database["public"]["Enums"]["encounter_type"]
           hba1c_monitoring?: boolean | null
           id?: string
           is_archived?: boolean
           objective?: Json | null
           patient_id: string
-          patient_type: string
+          reference_consultation_id?: string | null
           plan?: Json | null
           prescription?: Json | null
           subjective?: string | null
@@ -137,6 +143,8 @@ export type Database = {
         }
         Update: {
           assessment?: Json | null
+          assessment_items?: Json | null
+          additional_remarks?: string | null
           attending_nurse?: string | null
           attending_physician?: string
           bp_monitoring?: boolean | null
@@ -144,12 +152,13 @@ export type Database = {
           created_at?: string
           created_by?: string
           date?: string
+          encounter_type?: Database["public"]["Enums"]["encounter_type"]
           hba1c_monitoring?: boolean | null
           id?: string
           is_archived?: boolean
           objective?: Json | null
           patient_id?: string
-          patient_type?: string
+          reference_consultation_id?: string | null
           plan?: Json | null
           prescription?: Json | null
           subjective?: string | null
@@ -165,7 +174,49 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
+      },
+      consultation_edits: {
+        Row: {
+          id: string
+          consultation_id: string
+          user_id: string
+          edited_at: string
+          changes: any
+          reason: string | null
+        }
+        Insert: {
+          id?: string
+          consultation_id: string
+          user_id: string
+          edited_at?: string
+          changes: any
+          reason?: string | null
+        }
+        Update: {
+          id?: string
+          consultation_id?: string
+          user_id?: string
+          edited_at?: string
+          changes?: any
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultation_edits_consultation_id_fkey"
+            columns: ["consultation_id"]
+            isOneToOne: false
+            referencedRelation: "consultations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultation_edits_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      },
       drugs: {
         Row: {
           atc_code: string | null
@@ -192,7 +243,7 @@ export type Database = {
           id?: string
         }
         Relationships: []
-      }
+      },
       patients: {
         Row: {
           address: string | null
@@ -240,7 +291,7 @@ export type Database = {
           position?: string | null
         }
         Relationships: []
-      }
+      },
       profiles: {
         Row: {
           created_at: string
@@ -264,7 +315,7 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
+      },
       vital_signs: {
         Row: {
           created_by: string
@@ -317,6 +368,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      },
+      icd10_codes: {
+        Row: {
+          code: string
+          name: string
+          description: string | null
+          category: string | null
+          created_at: string
+        }
+        Insert: {
+          code: string
+          name: string
+          description?: string | null
+          category?: string | null
+          created_at?: string
+        }
+        Update: {
+          code?: string
+          name?: string
+          description?: string | null
+          category?: string | null
+          created_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -360,9 +435,136 @@ export type Database = {
           consultation_id: string
         }[]
       }
+      fetch_all_appointments: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          appointment_date: string
+          appointment_time: string
+          chief_complaint: string
+          status: string
+          patient_id: string
+          patient_name: string
+          nurse_id: string
+          nurse_name: string
+          is_archived: boolean
+        }[]
+      }
+      fetch_all_appointments_with_archived: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          appointment_date: string
+          appointment_time: string
+          chief_complaint: string
+          status: string
+          patient_id: string
+          patient_name: string
+          nurse_id: string
+          nurse_name: string
+          is_archived: boolean
+        }[]
+      }
+      fetch_patient_appointments: {
+        Args: { patient_id_param: string }
+        Returns: {
+          id: string
+          appointment_date: string
+          appointment_time: string
+          chief_complaint: string
+          attending_nurse: string
+          nurse_name: string
+          status: string
+          consultation_id: string
+          is_archived: boolean
+        }[]
+      }
+      fetch_patient_appointments_with_archived: {
+        Args: { patient_id_param: string }
+        Returns: {
+          id: string
+          appointment_date: string
+          appointment_time: string
+          chief_complaint: string
+          attending_nurse: string
+          nurse_name: string
+          status: string
+          consultation_id: string
+          is_archived: boolean
+        }[]
+      }
+      fetch_patient_consults: {
+        Args: { patient_id_param: string }
+        Returns: {
+          id: string
+          date: string
+          time: string
+          patient_id: string
+          chief_complaint: string
+          attending_physician_name: string
+          attending_physician: string
+          created_at: string
+          status: string
+          is_archived: boolean
+        }[]
+      }
+      fetch_patient_consults_with_archived: {
+        Args: { patient_id_param: string }
+        Returns: {
+          id: string
+          date: string
+          time: string
+          patient_id: string
+          chief_complaint: string
+          attending_physician_name: string
+          attending_physician: string
+          created_at: string
+          status: string
+          is_archived: boolean
+        }[]
+      }
+      search_icd10_codes: {
+        Args: { search_term: string }
+        Returns: {
+          code: string
+          name: string
+          description: string
+        }[]
+      }
+      get_users_by_role: {
+        Args: { role_filter: string }
+        Returns: {
+          id: string
+          name: string
+          role: string
+          created_at: string
+          updated_at: string
+        }[]
+      }
+      get_patient_with_related_data: {
+        Args: { 
+          patient_id_param: string
+          include_archived?: boolean
+          start_date?: string
+          end_date?: string
+          limit_param?: number
+          offset_param?: number
+        }
+        Returns: any
+      }
+      log_consultation_edit: {
+        Args: {
+          consultation_id_param: string
+          user_id_param: string
+          changes_param: any
+          reason_param?: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       user_role: "admin" | "doctor" | "nurse" | "staff"
+      encounter_type: "NEW_CONSULT" | "FOLLOW_UP" | "EMERGENCY"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -479,6 +681,7 @@ export const Constants = {
   public: {
     Enums: {
       user_role: ["admin", "doctor", "nurse", "staff"],
+      encounter_type: ["NEW_CONSULT", "FOLLOW_UP", "EMERGENCY"],
     },
   },
 } as const

@@ -42,9 +42,7 @@ const Appointments = () => {
         if (showArchived) {
           try {
             const { data: archivedData, error: archivedError } = await supabase
-              .rpc('get_appointments_with_details_archived', {
-                include_archived: true
-              } as any);
+              .rpc('fetch_all_appointments_with_archived');
               
             if (archivedError) {
               console.error("Archive function error:", archivedError);
@@ -57,14 +55,14 @@ const Appointments = () => {
             console.error("Failed with archive function, falling back to standard:", err);
             // Fall back to standard function if archive function fails
             const response = await supabase
-              .rpc('get_appointments_with_details');
+              .rpc('fetch_all_appointments');
             data = response.data;
             error = response.error;
           }
         } else {
           // Use the standard function (which only shows non-archived)
           const response = await supabase
-            .rpc('get_appointments_with_details') as any;
+            .rpc('fetch_all_appointments');
           data = response.data;
           error = response.error;
         }

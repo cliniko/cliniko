@@ -106,10 +106,9 @@ const PatientDetail = () => {
         if (showArchived) {
           try {
             const { data: archivedData, error: archivedError } = await supabase
-              .rpc('get_patient_consults_archived', {
-                patient_id_param: id,
-                include_archived: true
-              } as any);
+              .rpc('fetch_patient_consults_with_archived', {
+                patient_id_param: id
+              });
               
             if (archivedError) throw archivedError;
             consultData = archivedData;
@@ -117,9 +116,9 @@ const PatientDetail = () => {
             console.error("Archive function error:", err);
             // Fall back to standard function
             const { data, error } = await supabase
-              .rpc('get_patient_consults', { 
+              .rpc('fetch_patient_consults', { 
                 patient_id_param: id
-              } as any);
+              });
             
             if (error) throw error;
             consultData = data;
@@ -127,9 +126,9 @@ const PatientDetail = () => {
         } else {
           // Otherwise, use the regular function
           const { data, error } = await supabase
-            .rpc('get_patient_consults', { 
+            .rpc('fetch_patient_consults', { 
               patient_id_param: id
-            } as any);
+            });
           
           if (error) throw error;
           consultData = data;
@@ -165,10 +164,9 @@ const PatientDetail = () => {
         if (showArchived) {
           try {
             const { data: archivedData, error: archivedError } = await supabase
-              .rpc('get_patient_appointments_archived', {
-                patient_id_param: id,
-                include_archived: true
-              } as any);
+              .rpc('fetch_patient_appointments_with_archived', {
+                patient_id_param: id
+              });
               
             if (archivedError) throw archivedError;
             appointmentData = archivedData;
@@ -176,9 +174,9 @@ const PatientDetail = () => {
             console.error("Archive function error:", err);
             // Fall back to standard function
             const { data, error } = await supabase
-              .rpc('get_patient_appointments', { 
+              .rpc('fetch_patient_appointments', { 
                 patient_id_param: id
-              } as any);
+              });
             
             if (error) throw error;
             appointmentData = data;
@@ -186,9 +184,9 @@ const PatientDetail = () => {
         } else {
           // Otherwise, use the regular function
           const { data, error } = await supabase
-            .rpc('get_patient_appointments', { 
+            .rpc('fetch_patient_appointments', { 
               patient_id_param: id
-            } as any);
+            });
           
           if (error) throw error;
           appointmentData = data;
