@@ -89,9 +89,9 @@ const Dashboard = () => {
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
         {/* APPOINTMENTS - Highest priority */}
-        <Card className="overflow-hidden border border-border/60 transition-all hover:border-medical-doctor/20 hover:shadow-md">
-          <CardHeader className="pb-2 p-4 sm:p-5">
-            <div className="size-10 sm:size-12 lg:size-14 rounded-md bg-medical-doctor/10 flex items-center justify-center mb-2">
+        <Card className="overflow-hidden card-doctor">
+          <CardHeader className="pb-2 p-4 sm:p-5 card-header-doctor rounded-t-lg">
+            <div className="size-10 sm:size-12 lg:size-14 rounded-md bg-medical-doctor/15 flex items-center justify-center mb-2">
               <CalendarClock className="size-6 sm:size-7 lg:size-8 text-medical-doctor" />
             </div>
             <CardTitle className="text-lg sm:text-xl">Today's Schedule</CardTitle>
@@ -103,7 +103,7 @@ const Dashboard = () => {
             ) : (
               <p className="text-xl sm:text-2xl font-bold">{todayAppointments}</p>
             )}
-                          <p className="text-xs sm:text-sm text-gray-600">Scheduled today</p>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Scheduled today</p>
           </CardContent>
           <CardFooter className="p-4 sm:p-5 pt-2">
             <Button 
@@ -116,9 +116,9 @@ const Dashboard = () => {
         </Card>
         
         {/* PATIENTS - Second priority */}
-        <Card className="overflow-hidden border border-border/60 transition-all hover:border-medical-nurse/20 hover:shadow-md">
-          <CardHeader className="pb-2 p-4 sm:p-5">
-            <div className="size-10 sm:size-12 lg:size-14 rounded-md bg-medical-nurse/10 flex items-center justify-center mb-2">
+        <Card className="overflow-hidden card-nurse">
+          <CardHeader className="pb-2 p-4 sm:p-5 card-header-nurse rounded-t-lg">
+            <div className="size-10 sm:size-12 lg:size-14 rounded-md bg-medical-nurse/15 flex items-center justify-center mb-2">
               <Users className="size-6 sm:size-7 lg:size-8 text-medical-nurse" />
             </div>
             <CardTitle className="text-lg sm:text-xl">Patients</CardTitle>
@@ -130,7 +130,7 @@ const Dashboard = () => {
             ) : (
               <p className="text-xl sm:text-2xl font-bold">{patientsCount}</p>
             )}
-            <p className="text-xs sm:text-sm text-gray-600">Registered patients</p>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Registered patients</p>
           </CardContent>
           <CardFooter className="p-4 sm:p-5 pt-2">
             <Button 
@@ -144,9 +144,9 @@ const Dashboard = () => {
         </Card>
         
         {/* USERS - Lowest priority */}
-        <Card className="overflow-hidden border border-border/60 transition-all hover:border-medical-admin/20 hover:shadow-md">
-          <CardHeader className="pb-2 p-4 sm:p-5">
-            <div className="size-10 sm:size-12 lg:size-14 rounded-md bg-medical-admin/10 flex items-center justify-center mb-2">
+        <Card className="overflow-hidden card-admin">
+          <CardHeader className="pb-2 p-4 sm:p-5 card-header-admin rounded-t-lg">
+            <div className="size-10 sm:size-12 lg:size-14 rounded-md bg-medical-admin/15 flex items-center justify-center mb-2">
               <UserCog className="size-6 sm:size-7 lg:size-8 text-medical-admin" />
             </div>
             <CardTitle className="text-lg sm:text-xl">Users</CardTitle>
@@ -158,7 +158,7 @@ const Dashboard = () => {
             ) : (
               <p className="text-xl sm:text-2xl font-bold">{usersCount}</p>
             )}
-            <p className="text-xs sm:text-sm text-gray-600">Active users</p>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Active users</p>
           </CardContent>
           <CardFooter className="p-4 sm:p-5 pt-2">
             <Button 
@@ -177,19 +177,19 @@ const Dashboard = () => {
         <Collapsible
           open={isSystemInfoOpen}
           onOpenChange={setIsSystemInfoOpen}
-          className="border border-border/60 rounded-md"
+          className="border border-border/60 rounded-md bg-gradient-to-b from-white to-card/50 dark:from-slate-800/90 dark:to-slate-900 shadow-sm"
         >
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="w-full flex justify-between p-4 sm:p-5">
+            <Button variant="ghost" className="w-full flex justify-between p-4 sm:p-5 bg-slate-50/50 dark:bg-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/80 rounded-t-md">
               <div className="flex items-center">
-                <Info className="h-4 w-4 mr-2 text-gray-600" />
-                <span className="font-medium text-gray-900">System Information</span>
+                <Info className="h-4 w-4 mr-2 text-medical-staff-dark dark:text-medical-staff-medium" />
+                <span className="font-medium text-gray-900 dark:text-gray-200">System Information</span>
               </div>
               {isSystemInfoOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent className="px-4 sm:px-5 pb-5">
-            <p className="text-xs sm:text-sm text-gray-600">
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
               This application features enterprise-grade architecture with comprehensive data visualization and reporting functions.
             </p>
           </CollapsibleContent>

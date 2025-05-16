@@ -7,8 +7,13 @@
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 
-    --card: 0 0% 100%;
+    /* Updated card variables for better UI standards */
+    --card: 210 40% 99%;
     --card-foreground: 222.2 84% 4.9%;
+    --card-border: 214.3 31.8% 91.4%;
+    --card-shadow: 210 20% 98%;
+    --card-hover-shadow: 210 20% 96%;
+    --card-hover-border: 214.3 31.8% 85%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;

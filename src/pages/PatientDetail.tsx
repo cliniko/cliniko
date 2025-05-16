@@ -303,20 +303,20 @@ const PatientDetail = () => {
 
   if (isLoadingPatient) {
     return (
-      <div className="container max-w-6xl mx-auto p-4 flex items-center justify-center h-64">
-        <div className="text-center">Loading patient details...</div>
+      <div className="container max-w-6xl mx-auto px-4 py-8 flex items-center justify-center h-64">
+        <div className="text-center text-sm sm:text-base">Loading patient details...</div>
       </div>
     );
   }
 
   if (!patient) {
     return (
-      <div className="container max-w-6xl mx-auto p-4">
+      <div className="container max-w-6xl mx-auto px-4 py-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600">Patient Not Found</h1>
-          <p className="mt-2">The requested patient does not exist or was deleted.</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-red-600">Patient Not Found</h1>
+          <p className="mt-2 text-sm sm:text-base">The requested patient does not exist or was deleted.</p>
           <Button 
-            className="mt-4"
+            className="mt-4 text-sm"
             onClick={() => navigate('/patients')}
           >
             Return to Patients
@@ -327,21 +327,22 @@ const PatientDetail = () => {
   }
 
   return (
-    <div className="container max-w-6xl mx-auto p-4 space-y-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-blue-700">Patient Details</h1>
+    <div className="container max-w-6xl mx-auto px-2 sm:px-4 py-4 space-y-6 sm:space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <h1 className="text-xl sm:text-2xl font-bold text-blue-700">Patient Details</h1>
           {patient.isArchived && <ArchivedBadge />}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 mt-2 sm:mt-0">
           <Button 
             variant="outline" 
             size="sm" 
-            className="flex items-center gap-1.5"
+            className="flex items-center gap-1.5 text-xs sm:text-sm"
             onClick={() => navigate('/patients')}
           >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Patient List
+            <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="sm:inline">Back</span>
+            <span className="hidden sm:inline"> to Patient List</span>
           </Button>
           
           {/* Only show the archive button to admin users */}
@@ -357,14 +358,24 @@ const PatientDetail = () => {
       </div>
       
       {/* Patient Information Card */}
-      <Card className={`overflow-hidden ${patient.isArchived ? 'bg-amber-50/30 border-amber-200/50' : ''}`}>
-        <CardHeader className={patient.isArchived ? "bg-amber-50/70" : "bg-blue-50"}>
+      <Card className={`overflow-hidden ${
+        patient.isArchived 
+          ? 'bg-gradient-to-b from-amber-50/50 to-amber-50/30 border-amber-200/50 dark:from-amber-900/20 dark:to-slate-900' 
+          : 'card-doctor'
+        }`}
+      >
+        <CardHeader className={`rounded-t-lg ${
+          patient.isArchived 
+            ? "bg-amber-50/70 dark:bg-amber-900/20" 
+            : "card-header-doctor bg-opacity-80"
+          }`}
+        >
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
             <div>
               <CardTitle className="text-xl flex items-center gap-2">
                 {patient.name}
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="dark:text-gray-300">
                 {patient.gender}, {patient.dateOfBirth ? `${calculateAge(patient.dateOfBirth)} years old` : 'Unknown Age'}
               </CardDescription>
             </div>
@@ -374,62 +385,62 @@ const PatientDetail = () => {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="flex items-center gap-1.5"
+                    className="flex items-center gap-1.5 border-medical-doctor/30 hover:bg-medical-doctor hover:text-white"
                     onClick={() => navigate(`/consults/new?patientId=${patient.id}`)}
                   >
                     <FileText className="h-4 w-4" />
-                    New Consult
+                    <span className="sm:inline">New Consult</span>
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="flex items-center gap-1.5"
+                    className="flex items-center gap-1.5 border-medical-nurse/30 hover:bg-medical-nurse hover:text-white"
                     onClick={() => navigate(`/appointments/new?patientId=${patient.id}`)}
                   >
                     <CalendarPlus className="h-4 w-4" />
-                    Schedule Appointment
+                    <span className="sm:inline">Schedule</span>
                   </Button>
                 </>
               )}
             </div>
           </div>
         </CardHeader>
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
+        <CardContent className="p-4 sm:p-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 sm:gap-x-8">
             <div>
-              <h3 className="text-sm font-medium text-gray-500">Position</h3>
-              <p className="mt-1">{patient.position || 'Not specified'}</p>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Position</h3>
+              <p className="mt-1 text-sm sm:text-base dark:text-gray-300">{patient.position || 'Not specified'}</p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-gray-500">Designation</h3>
-              <p className="mt-1">{patient.designation || 'Not specified'}</p>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Designation</h3>
+              <p className="mt-1 text-sm sm:text-base dark:text-gray-300">{patient.designation || 'Not specified'}</p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-gray-500">Contact Number</h3>
-              <p className="mt-1">{patient.contact || 'Not specified'}</p>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Contact Number</h3>
+              <p className="mt-1 text-sm sm:text-base dark:text-gray-300">{patient.contact || 'Not specified'}</p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-gray-500">Email</h3>
-              <p className="mt-1">{patient.email || 'Not specified'}</p>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Email</h3>
+              <p className="mt-1 text-sm sm:text-base break-words dark:text-gray-300">{patient.email || 'Not specified'}</p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-gray-500">Date of Birth</h3>
-              <p className="mt-1">{patient.dateOfBirth ? formatDate(patient.dateOfBirth) : 'Not specified'}</p>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Date of Birth</h3>
+              <p className="mt-1 text-sm sm:text-base dark:text-gray-300">{patient.dateOfBirth ? formatDate(patient.dateOfBirth) : 'Not specified'}</p>
             </div>
             <div>
-              <h3 className="text-sm font-medium text-gray-500">Registered On</h3>
-              <p className="mt-1">{formatDate(patient.createdAt)}</p>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Registered On</h3>
+              <p className="mt-1 text-sm sm:text-base dark:text-gray-300">{formatDate(patient.createdAt)}</p>
             </div>
             {patient.address && (
               <div className="col-span-2">
-                <h3 className="text-sm font-medium text-gray-500">Address</h3>
-                <p className="mt-1">{patient.address}</p>
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Address</h3>
+                <p className="mt-1 text-sm sm:text-base dark:text-gray-300">{patient.address}</p>
               </div>
             )}
             {patient.medicalHistory && (
               <div className="col-span-2 mt-2">
-                <h3 className="text-sm font-medium text-gray-500">Medical History</h3>
-                <p className="mt-1 whitespace-pre-line">{patient.medicalHistory}</p>
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Medical History</h3>
+                <p className="mt-1 text-sm sm:text-base whitespace-pre-line dark:text-gray-300">{patient.medicalHistory}</p>
               </div>
             )}
           </div>
@@ -439,16 +450,16 @@ const PatientDetail = () => {
       {/* Medical Records Tabs */}
       <div>
         <Tabs defaultValue="consults" className="w-full">
-          <TabsList className="grid grid-cols-2 w-[400px]">
+          <TabsList className="grid grid-cols-2 w-full max-w-md">
             <TabsTrigger value="consults">Consultation Records</TabsTrigger>
             <TabsTrigger value="appointments">Appointments</TabsTrigger>
           </TabsList>
           
           {/* Show archive toggle for admin users */}
           {currentUser?.role === 'admin' && (
-            <div className="flex justify-end mt-4">
-              <div className="flex items-center gap-2 bg-amber-50/50 p-2 px-3 rounded-md border border-amber-200">
-                <label htmlFor="showArchived" className="text-sm">
+            <div className="flex justify-end mt-3 sm:mt-4">
+              <div className="flex items-center gap-2 bg-amber-50/50 p-1.5 sm:p-2 px-2 sm:px-3 rounded-md border border-amber-200 text-xs sm:text-sm">
+                <label htmlFor="showArchived" className="whitespace-nowrap">
                   Show archived records
                 </label>
                 <input
@@ -456,54 +467,57 @@ const PatientDetail = () => {
                   type="checkbox"
                   checked={showArchived}
                   onChange={(e) => setShowArchived(e.target.checked)}
-                  className="h-4 w-4"
+                  className="h-3.5 w-3.5 sm:h-4 sm:w-4"
                 />
               </div>
             </div>
           )}
           
           {/* Consultations Tab */}
-          <TabsContent value="consults" className="mt-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Consultation History</CardTitle>
+          <TabsContent value="consults" className="mt-3 sm:mt-4">
+            <Card className="card-doctor">
+              <CardHeader className="pb-2 sm:pb-3 card-header-doctor rounded-t-lg">
+                <CardTitle className="text-base sm:text-lg">Consultation History</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 sm:p-6">
                 {isLoadingConsults ? (
-                  <div className="text-center py-4">Loading consultations...</div>
+                  <div className="text-center py-4 text-sm sm:text-base">Loading consultations...</div>
                 ) : consults && consults.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[120px]">Date</TableHead>
-                        <TableHead className="w-[100px]">Time</TableHead>
-                        <TableHead>Chief Complaint</TableHead>
-                        <TableHead>Physician</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {consults.map((consult) => (
-                        <TableRow key={consult.id} className={consult.status === 'archived' ? "bg-amber-50/30" : ""}>
-                          <TableCell>{formatDate(consult.date)}</TableCell>
-                          <TableCell>{formatTime(consult.time)}</TableCell>
-                          <TableCell>{consult.chief_complaint}</TableCell>
-                          <TableCell>{consult.attending_physician_name}</TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => navigate(`/consults/${consult.id}`)}
-                            >
-                              View Details
-                            </Button>
-                          </TableCell>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[100px]">Date</TableHead>
+                          <TableHead className="w-[90px]">Time</TableHead>
+                          <TableHead>Chief Complaint</TableHead>
+                          <TableHead className="hidden sm:table-cell">Physician</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {consults.map((consult) => (
+                          <TableRow key={consult.id} className={consult.status === 'archived' ? "bg-amber-50/30" : ""}>
+                            <TableCell>{formatDate(consult.date)}</TableCell>
+                            <TableCell>{formatTime(consult.time)}</TableCell>
+                            <TableCell className="max-w-[150px] truncate">{consult.chief_complaint}</TableCell>
+                            <TableCell className="hidden sm:table-cell">{consult.attending_physician_name}</TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => navigate(`/consults/${consult.id}`)}
+                                className="whitespace-nowrap"
+                              >
+                                View
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 ) : (
-                  <div className="text-center py-6 text-gray-500">
+                  <div className="text-center py-6 text-sm sm:text-base text-gray-500">
                     No consultation records found
                   </div>
                 )}
@@ -512,57 +526,60 @@ const PatientDetail = () => {
           </TabsContent>
           
           {/* Appointments Tab */}
-          <TabsContent value="appointments" className="mt-4">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Appointment Schedule</CardTitle>
+          <TabsContent value="appointments" className="mt-3 sm:mt-4">
+            <Card className="card-nurse">
+              <CardHeader className="pb-2 sm:pb-3 card-header-nurse rounded-t-lg">
+                <CardTitle className="text-base sm:text-lg">Appointment Schedule</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 sm:p-6">
                 {isLoadingAppointments ? (
-                  <div className="text-center py-4">Loading appointments...</div>
+                  <div className="text-center py-4 text-sm sm:text-base">Loading appointments...</div>
                 ) : appointments && appointments.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[120px]">Date</TableHead>
-                        <TableHead className="w-[100px]">Time</TableHead>
-                        <TableHead>Nurse</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {appointments.map((appointment: any) => (
-                        <TableRow 
-                          key={appointment.id}
-                          className={appointment.is_archived ? "bg-amber-50/30" : ""}
-                        >
-                          <TableCell>{formatDate(appointment.appointment_date)}</TableCell>
-                          <TableCell>{formatTime(appointment.appointment_time)}</TableCell>
-                          <TableCell>{appointment.nurse_name}</TableCell>
-                          <TableCell>
-                            <Badge variant={appointment.status as "scheduled" | "completed" | "cancelled"}>
-                              {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
-                            </Badge>
-                            {appointment.is_archived && (
-                              <ArchivedBadge size="sm" className="ml-2" />
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => navigate(`/appointments/${appointment.id}`)}
-                            >
-                              View Details
-                            </Button>
-                          </TableCell>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[100px]">Date</TableHead>
+                          <TableHead className="w-[90px]">Time</TableHead>
+                          <TableHead className="hidden sm:table-cell">Nurse</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {appointments.map((appointment: any) => (
+                          <TableRow 
+                            key={appointment.id}
+                            className={appointment.is_archived ? "bg-amber-50/30" : ""}
+                          >
+                            <TableCell>{formatDate(appointment.appointment_date)}</TableCell>
+                            <TableCell>{formatTime(appointment.appointment_time)}</TableCell>
+                            <TableCell className="hidden sm:table-cell">{appointment.nurse_name}</TableCell>
+                            <TableCell>
+                              <Badge variant={appointment.status as "scheduled" | "completed" | "cancelled"}>
+                                {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                              </Badge>
+                              {appointment.is_archived && (
+                                <ArchivedBadge size="sm" className="ml-2" />
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => navigate(`/appointments/${appointment.id}`)}
+                                className="whitespace-nowrap"
+                              >
+                                View
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
                 ) : (
-                  <div className="text-center py-6 text-gray-500">
+                  <div className="text-center py-6 text-sm sm:text-base text-gray-500">
                     No appointments scheduled
                   </div>
                 )}
