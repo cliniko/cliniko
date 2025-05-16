@@ -17,10 +17,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useAuth } from '@/context/AuthContext';
+import { ArchiveFilter } from '@/components/ui/archive-filter';
 
 const Appointments = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { currentUser } = useAuth();
+  const [showArchived, setShowArchived] = useState(false);
   
   // Get all appointments
   const {
@@ -28,12 +32,42 @@ const Appointments = () => {
     isLoading,
     refetch: refetchAppointments
   } = useQuery({
-    queryKey: ['appointments'],
+    queryKey: ['appointments', showArchived],
     queryFn: async () => {
       try {
-        // Create a custom query with joins to get patient and nurse names
-        const { data, error } = await supabase
-          .rpc('get_appointments_with_details');
+        let data;
+        let error;
+
+        // If archive toggle is on, use the archive-aware function
+        if (showArchived) {
+          try {
+            const { data: archivedData, error: archivedError } = await supabase
+              .rpc('get_appointments_with_details_archived', {
+                include_archived: true
+              } as any);
+              
+            if (archivedError) {
+              console.error("Archive function error:", archivedError);
+              throw archivedError;
+            }
+            
+            data = archivedData;
+            error = null;
+          } catch (err) {
+            console.error("Failed with archive function, falling back to standard:", err);
+            // Fall back to standard function if archive function fails
+            const response = await supabase
+              .rpc('get_appointments_with_details');
+            data = response.data;
+            error = response.error;
+          }
+        } else {
+          // Use the standard function (which only shows non-archived)
+          const response = await supabase
+            .rpc('get_appointments_with_details') as any;
+          data = response.data;
+          error = response.error;
+        }
         
         if (error) throw error;
         
@@ -169,13 +203,21 @@ const Appointments = () => {
           <h1 className="text-xl sm:text-2xl font-bold text-medical-doctor">Appointment Calendar</h1>
           <p className="text-gray-600 mt-1">View and manage scheduled appointments</p>
         </div>
-        <Button 
-          className="bg-medical-doctor hover:bg-medical-doctor-dark flex items-center gap-1.5 w-full sm:w-auto"
-          onClick={() => navigate('/appointments/new')}
-        >
-          <CalendarPlus className="h-4 w-4" />
-          New Appointment
-        </Button>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          {currentUser?.role === 'admin' && (
+            <ArchiveFilter 
+              showArchived={showArchived} 
+              onToggleShowArchived={setShowArchived} 
+            />
+          )}
+          <Button 
+            className="bg-medical-doctor hover:bg-medical-doctor-dark flex items-center gap-1.5 w-full sm:w-auto"
+            onClick={() => navigate('/appointments/new')}
+          >
+            <CalendarPlus className="h-4 w-4" />
+            New Appointment
+          </Button>
+        </div>
       </div>
       
       {isLoading ? (

@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -21,9 +21,10 @@ import {
   Eye,
   FileText,
   Calendar as CalendarIcon2,
-  MoreVertical
+  MoreVertical,
+  Plus
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -55,6 +56,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { PatientForm } from '@/components/medical/PatientForm';
+import { ArchiveFilter } from '@/components/ui/archive-filter';
+import { ArchivedBadge } from '@/components/ui/archived-badge';
 
 const Patients = () => {
   const navigate = useNavigate();
@@ -64,6 +68,8 @@ const Patients = () => {
   const [searchResults, setSearchResults] = useState<Patient[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
+  const [archivedCount, setArchivedCount] = useState(0);
   
   // Form states
   const [name, setName] = useState('');
@@ -87,7 +93,7 @@ const Patients = () => {
     isLoading,
     refetch: refetchPatients
   } = useQuery({
-    queryKey: ['patients', page, searchTerm],
+    queryKey: ['patients', page, searchTerm, showArchived],
     queryFn: async () => {
       try {
         // Always show all patients in the main list, regardless of search
@@ -98,6 +104,13 @@ const Patients = () => {
         // Filter by search term if provided
         if (searchTerm) {
           query = query.ilike('name', `%${searchTerm}%`);
+        }
+        
+        // Filter by archived status
+        if (showArchived) {
+          query = query.eq('is_archived', true);
+        } else {
+          query = query.eq('is_archived', false);
         }
         
         // Add pagination
@@ -121,8 +134,21 @@ const Patients = () => {
           position: item.position || undefined,
           designation: item.designation || undefined,
           medicalHistory: item.medical_history || undefined,
-          createdAt: item.created_at
+          createdAt: item.created_at,
+          isArchived: item.is_archived
         }));
+        
+        // Count archived patients for the badge
+        if (currentUser?.role === 'admin') {
+          const { count: archivedCount, error: countError } = await supabase
+            .from('patients')
+            .select('*', { count: 'exact' })
+            .eq('is_archived', true);
+          
+          if (!countError && count !== null) {
+            setArchivedCount(archivedCount);
+          }
+        }
         
         return {
           patients,
@@ -209,7 +235,8 @@ const Patients = () => {
             position: position || null,
             designation: designation || null,
             medical_history: medicalHistory || null,
-            created_by: currentUser.id
+            created_by: currentUser.id,
+            is_archived: false
           }
         ])
         .select();
@@ -601,167 +628,24 @@ const Patients = () => {
       </Card>
         
       <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
-        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md max-h-[90vh] overflow-y-auto">
+        <DialogTrigger asChild>
+          <Button className="bg-medical-doctor hover:bg-medical-doctor-dark">
+            <UserPlus className="mr-2 h-4 w-4" />
+            Add Patient
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Register New Patient</DialogTitle>
+            <DialogTitle>Add New Patient</DialogTitle>
             <DialogDescription>
-              Enter patient details to create a new record
+              Enter the patient's details below to create a new record
             </DialogDescription>
           </DialogHeader>
           
-          <div className="grid grid-cols-1 gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name <span className="text-destructive">*</span></Label>
-              <Input 
-                id="name" 
-                value={name} 
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter patient's full name"
-              />
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="dob">Date of Birth <span className="text-destructive">*</span></Label>
-                <div className="flex">
-                  <div className="relative flex-1">
-                    <Input
-                      id="dob"
-                      className="pr-10"
-                      placeholder="YYYY-MM-DD"
-                      value={dob ? format(dob, "yyyy-MM-dd") : ""}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (val === "") {
-                          setDob(undefined);
-                        } else {
-                          try {
-                            // Only set if it's a valid date
-                            const date = new Date(val);
-                            if (!isNaN(date.getTime())) {
-                              setDob(date);
-                            }
-                          } catch (e) {
-                            // Invalid date - do nothing
-                          }
-                        }
-                      }}
-                    />
-                    <Button
-                      variant="ghost"
-                      type="button"
-                      size="icon"
-                      className="absolute right-0 top-0 h-full px-3 text-muted-foreground"
-                      onClick={() => setIsCalendarOpen(true)}
-                    >
-                      <CalendarIcon className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                    <PopoverTrigger asChild>
-                      <span className="sr-only">Open calendar</span>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={dob}
-                        onSelect={(date) => {
-                          if (date) {
-                            setDob(date);
-                            // Close the calendar after selection
-                            setIsCalendarOpen(false);
-                          }
-                        }}
-                        initialFocus
-                        disabled={(date) => date > new Date()}
-                        fromDate={new Date("1900-01-01")}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="gender">Gender <span className="text-destructive">*</span></Label>
-                <Select value={gender} onValueChange={setGender}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="contact">Contact Number</Label>
-              <Input 
-                id="contact" 
-                value={contact}
-                onChange={(e) => setContact(e.target.value)}
-                placeholder="Enter contact number"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter email address"
-              />
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="position">Position</Label>
-                <Input
-                  id="position"
-                  value={position}
-                  onChange={(e) => setPosition(e.target.value)}
-                  placeholder="Enter position"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="designation">Designation</Label>
-                <Input
-                  id="designation"
-                  value={designation}
-                  onChange={(e) => setDesignation(e.target.value)}
-                  placeholder="Enter designation"
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="medical-history">Medical History</Label>
-              <Textarea
-                id="medical-history"
-                value={medicalHistory}
-                onChange={(e) => setMedicalHistory(e.target.value)}
-                placeholder="Enter any relevant medical history"
-                className="min-h-[80px]"
-              />
-            </div>
-          </div>
-          
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
-            <Button 
-              onClick={handleNewPatient}
-              disabled={isSubmitting}
-              className="bg-medical-doctor hover:bg-medical-doctor-dark"
-            >
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isSubmitting ? "Registering..." : "Register Patient"}
-            </Button>
-          </div>
+          <PatientForm
+            onSave={handleNewPatient}
+            onCancel={() => setIsAddModalOpen(false)}
+          />
         </DialogContent>
       </Dialog>
     </div>

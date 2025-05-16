@@ -25,37 +25,37 @@ import NewAppointment from './pages/NewAppointment';
 
 const App = () => (
   <ThemeProvider defaultTheme="light" storageKey="holcim-theme">
-    <Routes>
-      {/* Public Routes */}
-      <Route path="/" element={<Login />} />
-      <Route path="/register" element={<Register />} />
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Login />} />
+            <Route path="/register" element={<Register />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/docs" element={<Documentation />} />
       <Route path="/docs/components/:component" element={<Documentation />} />
-      
-      {/* Entry point for role-based routing */}
-      <Route path="/index" element={<Index />} />
-      
-      {/* Protected Routes with specific role restrictions */}
-      <Route 
-        element={
-          <RequireAuth>
+            
+            {/* Entry point for role-based routing */}
+            <Route path="/index" element={<Index />} />
+            
+            {/* Protected Routes with specific role restrictions */}
+            <Route 
+              element={
+                <RequireAuth>
             <MobileSidebarProvider>
-              <AppLayout />
+                  <AppLayout />
             </MobileSidebarProvider>
-          </RequireAuth>
-        }
-      >
-        <Route path="/dashboard" element={<Dashboard />} />
-        
-        <Route 
-          path="/consults" 
-          element={
-            <RequireAuth allowedRoles={['admin', 'doctor', 'nurse']}>
-              <Consults />
-            </RequireAuth>
-          } 
-        />
+                </RequireAuth>
+              }
+            >
+              <Route path="/dashboard" element={<Dashboard />} />
+              
+              <Route 
+                path="/consults" 
+                element={
+                  <RequireAuth allowedRoles={['admin', 'doctor', 'nurse']}>
+                    <Consults />
+                  </RequireAuth>
+                } 
+              />
         
         <Route 
           path="/consults/new" 
@@ -65,15 +65,15 @@ const App = () => (
             </RequireAuth>
           } 
         />
-        
-        <Route 
-          path="/patients" 
-          element={
-            <RequireAuth allowedRoles={['admin', 'doctor', 'nurse', 'staff']}>
-              <Patients />
-            </RequireAuth>
-          }
-        />
+              
+              <Route 
+                path="/patients" 
+                element={
+                  <RequireAuth allowedRoles={['admin', 'doctor', 'nurse', 'staff']}>
+                    <Patients />
+                  </RequireAuth>
+                }
+              />
         
         <Route 
           path="/patients/:id" 
@@ -101,24 +101,24 @@ const App = () => (
             </RequireAuth>
           }
         />
-        
-        <Route 
-          path="/users" 
-          element={
-            <RequireAuth allowedRoles={['admin']}>
-              <Users />
-            </RequireAuth>
-          } 
-        />
-        
-        <Route 
-          path="/vitals" 
-          element={
-            <RequireAuth allowedRoles={['admin', 'doctor', 'nurse']}>
-              <Vitals />
-            </RequireAuth>
-          } 
-        />
+              
+              <Route 
+                path="/users" 
+                element={
+                  <RequireAuth allowedRoles={['admin']}>
+                    <Users />
+                  </RequireAuth>
+                } 
+              />
+              
+              <Route 
+                path="/vitals" 
+                element={
+                  <RequireAuth allowedRoles={['admin', 'doctor', 'nurse']}>
+                    <Vitals />
+                  </RequireAuth>
+                } 
+              />
         
         <Route 
           path="/ai-notes" 
@@ -128,16 +128,16 @@ const App = () => (
             </RequireAuth>
           } 
         />
-      </Route>
-      
-      {/* Redirect root to login page */}
-      <Route path="" element={<Navigate to="/" replace />} />
-      
-      {/* 404 Route */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-    <Toaster />
-    <Sonner />
+            </Route>
+            
+            {/* Redirect root to login page */}
+            <Route path="" element={<Navigate to="/" replace />} />
+            
+            {/* 404 Route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+      <Toaster />
+      <Sonner />
   </ThemeProvider>
 );
 

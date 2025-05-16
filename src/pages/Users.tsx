@@ -686,12 +686,12 @@ const Users = () => {
       </Tabs>
       
       <Card className="border-l-4 border-l-medical-doctor">
-        <CardHeader className="pb-2">
+          <CardHeader className="pb-2">
           <CardTitle className="text-lg sm:text-xl">User Access Roles</CardTitle>
           <CardDescription>
             Overview of system roles and their permissions
           </CardDescription>
-        </CardHeader>
+          </CardHeader>
         <CardContent className="px-4 py-2 sm:p-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
             <div className="bg-gray-50 p-3 sm:p-4 rounded-md border-l-4 border-l-medical-doctor">
@@ -700,47 +700,47 @@ const Users = () => {
                 <h3 className="text-base sm:text-lg font-medium text-medical-doctor">Doctor</h3>
               </div>
               <p className="text-xs sm:text-sm text-gray-600">
-                Full access to all patient records, consultations, and medical data. 
-                Can create and edit records, prescribe medications, and manage patient care.
-              </p>
-            </div>
-            
+                  Full access to all patient records, consultations, and medical data. 
+                  Can create and edit records, prescribe medications, and manage patient care.
+                </p>
+              </div>
+              
             <div className="bg-gray-50 p-3 sm:p-4 rounded-md border-l-4 border-l-medical-nurse">
               <div className="flex items-center mb-2">
                 {getRoleIcon('nurse')}
                 <h3 className="text-base sm:text-lg font-medium text-medical-nurse">Nurse</h3>
               </div>
               <p className="text-xs sm:text-sm text-gray-600">
-                Can view all patient records, create and update vital signs, add notes, 
-                and assist with patient management. Cannot prescribe medications.
-              </p>
-            </div>
-            
+                  Can view all patient records, create and update vital signs, add notes, 
+                  and assist with patient management. Cannot prescribe medications.
+                </p>
+              </div>
+              
             <div className="bg-gray-50 p-3 sm:p-4 rounded-md border-l-4 border-l-medical-admin">
               <div className="flex items-center mb-2">
                 {getRoleIcon('admin')}
                 <h3 className="text-base sm:text-lg font-medium text-medical-admin">Administrator</h3>
               </div>
               <p className="text-xs sm:text-sm text-gray-600">
-                Manages system settings, user accounts, and access permissions. 
-                Can view reports and statistics but has limited access to medical data.
-              </p>
-            </div>
-            
+                  Manages system settings, user accounts, and access permissions. 
+                  Can view reports and statistics but has limited access to medical data.
+                </p>
+              </div>
+              
             <div className="bg-gray-50 p-3 sm:p-4 rounded-md border-l-4 border-l-medical-staff">
               <div className="flex items-center mb-2">
                 {getRoleIcon('staff')}
                 <h3 className="text-base sm:text-lg font-medium text-medical-staff">Staff</h3>
               </div>
               <p className="text-xs sm:text-sm text-gray-600">
-                Limited access for reception and administrative staff. 
-                Can view basic patient information, schedule appointments, 
-                and manage non-medical tasks.
-              </p>
+                  Limited access for reception and administrative staff. 
+                  Can view basic patient information, schedule appointments, 
+                  and manage non-medical tasks.
+                </p>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
     </div>
   );
 };

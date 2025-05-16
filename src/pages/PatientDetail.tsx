@@ -3,9 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, CalendarPlus, ClipboardCheck, FileText } from 'lucide-react';
+import { ArrowLeft, CalendarPlus, FileText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format, parseISO } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -18,7 +18,9 @@ import {
 } from "@/components/ui/table";
 import { Patient } from '@/types';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
+import { ArchiveButton } from '@/components/ui/archive-button';
+import { ArchivedBadge } from '@/components/ui/archived-badge';
+import { useAuth } from '@/context/AuthContext';
 
 interface Consult {
   id: string;
@@ -27,14 +29,19 @@ interface Consult {
   patient_id: string;
   chief_complaint: string;
   attending_physician_name: string;
+  attending_physician: string;
   created_at: string;
   status: string;
+  is_archived?: boolean;
 }
 
 const PatientDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { currentUser } = useAuth();
+  const [showArchived, setShowArchived] = useState(false);
   
   const {
     data: patient,
@@ -65,7 +72,8 @@ const PatientDetail = () => {
           position: data.position || undefined,
           designation: data.designation || undefined,
           medicalHistory: data.medical_history || undefined,
-          createdAt: data.created_at
+          createdAt: data.created_at,
+          isArchived: data.is_archived
         };
         
         return patientData;
@@ -86,18 +94,48 @@ const PatientDetail = () => {
     data: consults,
     isLoading: isLoadingConsults,
   } = useQuery({
-    queryKey: ['patient-consults', id],
+    queryKey: ['patient-consults', id, showArchived],
     queryFn: async () => {
       try {
         if (!id) throw new Error("Patient ID is required");
         
         // Use SQL function to get consults with physician names
-        const { data, error } = await supabase
-          .rpc('get_patient_consults', { patient_id_param: id });
+        let consultData;
+
+        // If showArchived is true, use the archive-aware function
+        if (showArchived) {
+          try {
+            const { data: archivedData, error: archivedError } = await supabase
+              .rpc('get_patient_consults_archived', {
+                patient_id_param: id,
+                include_archived: true
+              } as any);
+              
+            if (archivedError) throw archivedError;
+            consultData = archivedData;
+          } catch (err) {
+            console.error("Archive function error:", err);
+            // Fall back to standard function
+            const { data, error } = await supabase
+              .rpc('get_patient_consults', { 
+                patient_id_param: id
+              } as any);
+            
+            if (error) throw error;
+            consultData = data;
+          }
+        } else {
+          // Otherwise, use the regular function
+          const { data, error } = await supabase
+            .rpc('get_patient_consults', { 
+              patient_id_param: id
+            } as any);
           
-        if (error) throw error;
-        
-        return data as Consult[];
+          if (error) throw error;
+          consultData = data;
+        }
+
+        return consultData as Consult[];
       } catch (error: any) {
         console.error("Error fetching consults:", error);
         toast({
@@ -115,18 +153,48 @@ const PatientDetail = () => {
     data: appointments,
     isLoading: isLoadingAppointments,
   } = useQuery({
-    queryKey: ['patient-appointments', id],
+    queryKey: ['patient-appointments', id, showArchived],
     queryFn: async () => {
       try {
         if (!id) throw new Error("Patient ID is required");
         
         // Use SQL function to get appointments with nurse names
-        const { data, error } = await supabase
-          .rpc('get_patient_appointments', { patient_id_param: id });
+        let appointmentData;
+
+        // If showArchived is true, use the archive-aware function
+        if (showArchived) {
+          try {
+            const { data: archivedData, error: archivedError } = await supabase
+              .rpc('get_patient_appointments_archived', {
+                patient_id_param: id,
+                include_archived: true
+              } as any);
+              
+            if (archivedError) throw archivedError;
+            appointmentData = archivedData;
+          } catch (err) {
+            console.error("Archive function error:", err);
+            // Fall back to standard function
+            const { data, error } = await supabase
+              .rpc('get_patient_appointments', { 
+                patient_id_param: id
+              } as any);
+            
+            if (error) throw error;
+            appointmentData = data;
+          }
+        } else {
+          // Otherwise, use the regular function
+          const { data, error } = await supabase
+            .rpc('get_patient_appointments', { 
+              patient_id_param: id
+            } as any);
           
-        if (error) throw error;
-        
-        return data || [];
+          if (error) throw error;
+          appointmentData = data;
+        }
+
+        return appointmentData || [];
       } catch (error: any) {
         console.error("Error fetching appointments:", error);
         toast({
@@ -171,6 +239,69 @@ const PatientDetail = () => {
       return time;
     }
   };
+  
+  const handleArchive = async () => {
+    try {
+      if (!id) return;
+
+      const { error } = await supabase
+        .from('patients')
+        .update({ is_archived: true })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Show success message
+      toast({
+        title: "Patient archived",
+        description: "The patient record has been successfully archived."
+      });
+
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['patient', id] });
+
+      // Wait a moment for the optimistic UI update
+      setTimeout(() => {
+        navigate('/patients');
+      }, 500);
+    } catch (error: any) {
+      console.error("Error archiving patient:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to archive patient record",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleUnarchive = async () => {
+    try {
+      if (!id) return;
+
+      const { error } = await supabase
+        .from('patients')
+        .update({ is_archived: false })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // Show success message
+      toast({
+        title: "Patient restored",
+        description: "The patient record has been successfully restored."
+      });
+
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['patient', id] });
+    } catch (error: any) {
+      console.error("Error restoring patient:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to restore patient record",
+        variant: "destructive"
+      });
+    }
+  };
 
   if (isLoadingPatient) {
     return (
@@ -199,48 +330,69 @@ const PatientDetail = () => {
 
   return (
     <div className="container max-w-6xl mx-auto p-4 space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-blue-700">Patient Details</h1>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="flex items-center gap-1.5"
-          onClick={() => navigate('/patients')}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Patient List
-        </Button>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-blue-700">Patient Details</h1>
+          {patient.isArchived && <ArchivedBadge />}
+        </div>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="flex items-center gap-1.5"
+            onClick={() => navigate('/patients')}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Patient List
+          </Button>
+          
+          {/* Only show the archive button to admin users */}
+          {currentUser?.role === 'admin' && (
+            <ArchiveButton 
+              isArchived={patient.isArchived || false} 
+              onArchive={handleArchive}
+              onUnarchive={handleUnarchive}
+              recordType="patient"
+            />
+          )}
+        </div>
       </div>
       
       {/* Patient Information Card */}
-      <Card className="overflow-hidden">
-        <CardHeader className="bg-blue-50">
+      <Card className={`overflow-hidden ${patient.isArchived ? 'bg-amber-50/30 border-amber-200/50' : ''}`}>
+        <CardHeader className={patient.isArchived ? "bg-amber-50/70" : "bg-blue-50"}>
           <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
             <div>
-              <CardTitle className="text-xl">{patient.name}</CardTitle>
+              <CardTitle className="text-xl flex items-center gap-2">
+                {patient.name}
+              </CardTitle>
               <CardDescription>
                 {patient.gender}, {patient.dateOfBirth ? `${calculateAge(patient.dateOfBirth)} years old` : 'Unknown Age'}
               </CardDescription>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center gap-1.5"
-                onClick={() => navigate(`/consults/new?patientId=${patient.id}`)}
-              >
-                <FileText className="h-4 w-4" />
-                New Consult
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center gap-1.5"
-                onClick={() => navigate(`/appointments/new?patientId=${patient.id}`)}
-              >
-                <CalendarPlus className="h-4 w-4" />
-                Schedule Appointment
-              </Button>
+              {!patient.isArchived && (
+                <>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex items-center gap-1.5"
+                    onClick={() => navigate(`/consults/new?patientId=${patient.id}`)}
+                  >
+                    <FileText className="h-4 w-4" />
+                    New Consult
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex items-center gap-1.5"
+                    onClick={() => navigate(`/appointments/new?patientId=${patient.id}`)}
+                  >
+                    <CalendarPlus className="h-4 w-4" />
+                    Schedule Appointment
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -294,6 +446,24 @@ const PatientDetail = () => {
             <TabsTrigger value="appointments">Appointments</TabsTrigger>
           </TabsList>
           
+          {/* Show archive toggle for admin users */}
+          {currentUser?.role === 'admin' && (
+            <div className="flex justify-end mt-4">
+              <div className="flex items-center gap-2 bg-amber-50/50 p-2 px-3 rounded-md border border-amber-200">
+                <label htmlFor="showArchived" className="text-sm">
+                  Show archived records
+                </label>
+                <input
+                  id="showArchived"
+                  type="checkbox"
+                  checked={showArchived}
+                  onChange={(e) => setShowArchived(e.target.checked)}
+                  className="h-4 w-4"
+                />
+              </div>
+            </div>
+          )}
+          
           {/* Consultations Tab */}
           <TabsContent value="consults" className="mt-4">
             <Card>
@@ -316,7 +486,7 @@ const PatientDetail = () => {
                     </TableHeader>
                     <TableBody>
                       {consults.map((consult) => (
-                        <TableRow key={consult.id}>
+                        <TableRow key={consult.id} className={consult.status === 'archived' ? "bg-amber-50/30" : ""}>
                           <TableCell>{formatDate(consult.date)}</TableCell>
                           <TableCell>{formatTime(consult.time)}</TableCell>
                           <TableCell>{consult.chief_complaint}</TableCell>
@@ -365,7 +535,10 @@ const PatientDetail = () => {
                     </TableHeader>
                     <TableBody>
                       {appointments.map((appointment: any) => (
-                        <TableRow key={appointment.id}>
+                        <TableRow 
+                          key={appointment.id}
+                          className={appointment.is_archived ? "bg-amber-50/30" : ""}
+                        >
                           <TableCell>{formatDate(appointment.appointment_date)}</TableCell>
                           <TableCell>{formatTime(appointment.appointment_time)}</TableCell>
                           <TableCell>{appointment.nurse_name}</TableCell>
@@ -373,6 +546,9 @@ const PatientDetail = () => {
                             <Badge variant={appointment.status as "scheduled" | "completed" | "cancelled"}>
                               {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
                             </Badge>
+                            {appointment.is_archived && (
+                              <ArchivedBadge size="sm" className="ml-2" />
+                            )}
                           </TableCell>
                           <TableCell className="text-right">
                             <Button

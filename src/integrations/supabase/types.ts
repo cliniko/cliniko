@@ -19,6 +19,7 @@ export type Database = {
           created_at: string
           created_by: string
           id: string
+          is_archived: boolean
           objective: Json | null
           patient_id: string
           status: string
@@ -35,6 +36,7 @@ export type Database = {
           created_at?: string
           created_by: string
           id?: string
+          is_archived?: boolean
           objective?: Json | null
           patient_id: string
           status: string
@@ -51,6 +53,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           id?: string
+          is_archived?: boolean
           objective?: Json | null
           patient_id?: string
           status?: string
@@ -101,6 +104,7 @@ export type Database = {
           date: string
           hba1c_monitoring: boolean | null
           id: string
+          is_archived: boolean
           objective: Json | null
           patient_id: string
           patient_type: string
@@ -121,6 +125,7 @@ export type Database = {
           date: string
           hba1c_monitoring?: boolean | null
           id?: string
+          is_archived?: boolean
           objective?: Json | null
           patient_id: string
           patient_type: string
@@ -141,6 +146,7 @@ export type Database = {
           date?: string
           hba1c_monitoring?: boolean | null
           id?: string
+          is_archived?: boolean
           objective?: Json | null
           patient_id?: string
           patient_type?: string
@@ -198,6 +204,7 @@ export type Database = {
           email: string | null
           gender: string
           id: string
+          is_archived: boolean
           medical_history: string | null
           name: string
           position: string | null
@@ -212,6 +219,7 @@ export type Database = {
           email?: string | null
           gender: string
           id?: string
+          is_archived?: boolean
           medical_history?: string | null
           name: string
           position?: string | null
@@ -226,6 +234,7 @@ export type Database = {
           email?: string | null
           gender?: string
           id?: string
+          is_archived?: boolean
           medical_history?: string | null
           name?: string
           position?: string | null

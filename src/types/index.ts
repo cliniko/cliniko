@@ -20,6 +20,7 @@ export interface Patient {
   designation?: string;
   medicalHistory?: string;
   createdAt: string;
+  isArchived?: boolean;
 }
 
 // Define the mapping interface between DB and frontend types
@@ -36,6 +37,7 @@ export interface PatientMapping {
   medical_history: string | null;
   created_at: string;
   created_by: string;
+  is_archived: boolean;
 }
 
 export interface Drug {
@@ -108,6 +110,7 @@ export interface Consultation {
   hba1c_monitoring: boolean;
   created_by: string;
   created_at: string;
+  isArchived?: boolean;
 }
 
 /**
@@ -134,6 +137,7 @@ export interface Appointment {
   // Joined fields from RPC functions
   patient_name?: string;
   nurse_name?: string;
+  isArchived?: boolean;
 }
 
 /**
@@ -152,4 +156,5 @@ export interface AppointmentSubmission {
   status: 'scheduled' | 'completed' | 'cancelled';
   consultation_id: string | null;
   created_by: string;
+  isArchived?: boolean;
 }
